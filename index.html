@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preeti Attarde | Finance • Strategy • Creativity</title>
+    <title>Preeti Attarde | Finance • Accounting • Business Operations</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,6 +20,7 @@
             --accent-blue-hover: #2563EB;
             --text-main: #0F172A;
             --text-secondary: #475569;
+            --highlight-bg: rgba(59, 130, 246, 0.12);
         }
 
         /* Global Reset & Base Styles */
@@ -73,6 +74,17 @@
             font-size: 1.125rem;
             color: var(--text-secondary);
             margin-bottom: 1rem;
+        }
+
+        /* Highlighter Style for Metrics */
+        .metric-highlight {
+            background-color: var(--highlight-bg);
+            color: var(--navy);
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 2px 0;
         }
 
         /* Layout Utilities */
@@ -130,7 +142,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            opacity: 0; /* Hidden initially, fades in on scroll */
+            opacity: 0; 
             transform: translateY(-100%);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
@@ -175,7 +187,7 @@
         }
 
         /* * ==========================================
-         * DYNAMIC HERO & SCROLL TRANSITION
+         * SUBTLE HERO & SCROLL TRANSITION
          * ==========================================
          */
         
@@ -188,43 +200,30 @@
             position: relative;
             color: var(--white);
             overflow: hidden;
-            background-color: var(--white); /* The actual background is white, revealed on split */
+            background-color: var(--white); /* White base revealed on scroll */
         }
 
-        /* The Dramatic Split Background Panels */
-        .hero-bg-left, .hero-bg-right {
+        /* Subtle Fade Background Overlay */
+        .hero-bg {
             position: absolute;
-            top: 0; bottom: 0;
-            width: 50%;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(135deg, var(--navy-light), var(--navy));
             z-index: 0;
-            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+            transition: opacity 0.8s ease, filter 0.8s ease;
         }
 
-        .hero-bg-left { 
-            left: 0; 
-            border-right: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-        
-        .hero-bg-right { 
-            right: 0; 
-            border-left: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-
-        /* Subtle analytic grid on the dark panels */
-        .hero-bg-left::before, .hero-bg-right::before {
+        .hero-bg::before {
             content: '';
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 30px 30px;
         }
 
-        /* Split Trigger */
-        body.is-scrolled .hero-bg-left {
-            transform: translateX(-100%);
-        }
-        body.is-scrolled .hero-bg-right {
-            transform: translateX(100%);
+        /* Transition Trigger */
+        body.is-scrolled .hero-bg {
+            opacity: 0;
+            filter: blur(10px);
+            pointer-events: none;
         }
 
         .hero-content {
@@ -233,46 +232,43 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: opacity 0.6s ease, transform 0.6s ease;
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         body.is-scrolled .hero-content {
             opacity: 0;
-            transform: translateY(-40px);
+            transform: translateY(-20px); /* Subtler upward movement */
             pointer-events: none;
         }
 
-        /* The Avatar Placeholder (reserves space in hero) */
         #avatar-placeholder {
             width: 170px;
             height: 170px;
             margin-bottom: 2rem;
         }
 
-        /* The Floating Avatar (Slides to Nav) */
         #floating-avatar {
             position: fixed;
-            z-index: 1001; /* Above navbar */
+            z-index: 1001; 
             width: 170px;
             height: 170px;
-            border-radius: 35%; /* Squircle */
+            border-radius: 35%;
             object-fit: cover;
             border: 4px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            /* Tracks JS instantly by default to prevent jitter */
             transition: none; 
         }
 
-        /* Class added via JS ONLY when animating to/from the nav bar */
         #floating-avatar.animating {
-            transition: top 1s cubic-bezier(0.77, 0, 0.175, 1),
-                        left 1s cubic-bezier(0.77, 0, 0.175, 1),
-                        width 1s cubic-bezier(0.77, 0, 0.175, 1),
-                        height 1s cubic-bezier(0.77, 0, 0.175, 1),
-                        border-radius 1s ease,
-                        border-color 1s ease,
-                        box-shadow 1s ease,
-                        transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+            /* Smoother easing for both scroll directions */
+            transition: top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        left 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-radius 0.8s ease,
+                        border-color 0.8s ease,
+                        box-shadow 0.8s ease,
+                        transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body.is-scrolled #floating-avatar {
@@ -335,7 +331,35 @@
             position: relative;
         }
 
-        /* Experience Section (Cards Layout) */
+        /* Bullet List (Fix for Wrapping Issue) */
+        .bullet-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding: 0.75rem 0 0.75rem 1.75rem;
+            border-bottom: 1px solid var(--soft-gray-dark);
+            color: var(--text-secondary);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .bullet-list li::before {
+            content: '→';
+            color: var(--accent-blue);
+            position: absolute;
+            left: 0;
+            top: 0.75rem; /* Aligns perfectly with the first line of text */
+            font-weight: bold;
+        }
+
+        .bullet-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Experience Section */
         .experience {
             background-color: var(--soft-gray);
         }
@@ -358,17 +382,6 @@
             overflow: hidden;
         }
 
-        .exp-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 150px; height: 150px;
-            background: radial-gradient(circle, var(--soft-gray) 0%, transparent 70%);
-            opacity: 0.5;
-            border-radius: 50%;
-            transform: translate(30%, -30%);
-        }
-
         .exp-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
@@ -378,7 +391,7 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             flex-wrap: wrap;
         }
 
@@ -394,9 +407,26 @@
             color: var(--muted-blue);
         }
 
-        .exp-impact {
+        .exp-bullets {
+            list-style: none;
+        }
+
+        .exp-bullets li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
             color: var(--text-secondary);
             font-size: 1rem;
+        }
+
+        .exp-bullets li::before {
+            content: '•';
+            color: var(--accent-blue);
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1.5rem;
+            line-height: 1.2;
         }
 
         /* Skills Section */
@@ -430,30 +460,6 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-        }
-
-        .skill-list {
-            list-style: none;
-        }
-
-        .skill-list li {
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--soft-gray-dark);
-            color: var(--text-secondary);
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-        }
-
-        .skill-list li::before {
-            content: '→';
-            color: var(--accent-blue);
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        .skill-list li:last-child {
-            border-bottom: none;
         }
 
         /* Contact Section */
@@ -505,7 +511,7 @@
             .hero h1 { font-size: 2.8rem; }
             .tagline { flex-direction: column; gap: 0.5rem; font-size: 1.25rem; }
             .tagline .separator { display: none; }
-            .nav-links { display: none; } /* Simplified mobile nav */
+            .nav-links { display: none; } 
             .skills-grid { grid-template-columns: 1fr; }
             .exp-header { flex-direction: column; }
             .contact-links { flex-direction: column; align-items: center; }
@@ -529,8 +535,7 @@
     </nav>
 
     <header class="hero">
-        <div class="hero-bg-left"></div>
-        <div class="hero-bg-right"></div>
+        <div class="hero-bg"></div>
         
         <div class="hero-content">
             <div id="avatar-placeholder"></div>
@@ -538,9 +543,9 @@
             <div class="tagline">
                 <span>Finance</span>
                 <span class="separator">•</span>
-                <span>Strategy</span>
+                <span>Accounting</span>
                 <span class="separator">•</span>
-                <span>Creativity</span>
+                <span>Business Operations</span>
             </div>
             <a href="#experience" class="btn">View My Work</a>
         </div>
@@ -555,9 +560,9 @@
             </div>
             <div class="about-stats">
                 <h3 style="color: var(--navy); margin-bottom: 1rem; font-size: 1.5rem;">Academic Highlights</h3>
-                <ul class="skill-list">
-                    <li><strong>GPA:</strong> 4.00/4.00</li>
-                    <li><strong>Standardized:</strong> SAT 1570</li>
+                <ul class="bullet-list">
+                    <li><strong>GPA:</strong> <span class="metric-highlight">4.00/4.00</span></li>
+                    <li><strong>Standardized:</strong> <span class="metric-highlight">SAT 1570</span></li>
                     <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List</li>
                     <li><strong>Location:</strong> New Brunswick, NJ</li>
                 </ul>
@@ -567,20 +572,9 @@
 
     <section id="experience" class="experience">
         <div class="container">
-            <h2>Experience & Impact</h2>
+            <h2>Professional Experience</h2>
             
             <div class="experience-grid">
-                
-                <div class="exp-card">
-                    <div class="exp-header">
-                        <div>
-                            <h3 class="exp-title">Incoming Audit Intern</h3>
-                            <div class="exp-company">EY (Ernst & Young)</div>
-                        </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Next Summer</div>
-                    </div>
-                    <p class="exp-impact">Secured an upcoming audit internship at a Big Four accounting firm. Preparing to apply advanced accounting principles, data analytics, and rigorous financial verification techniques to support enterprise audit operations.</p>
-                </div>
 
                 <div class="exp-card">
                     <div class="exp-header">
@@ -590,7 +584,12 @@
                         </div>
                         <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current</div>
                     </div>
-                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue.</p>
+                    <ul class="exp-bullets">
+                        <li>Managing day-to-day velocity operations to measure team success and trajectory, relying on <span class="metric-highlight">Salesforce dashboards and reports, and PowerBI deal data</span>.</li>
+                        <li>Facilitating modernization of go-to-market tech stack to encompass <span class="metric-highlight">3 AI-driven outbound tools</span> for global sales teams, improving forecast accuracy and adoption of key sales initiatives.</li>
+                        <li>Conducted data validation and cleanup within a primary execution team as a result of a competitive market acquisition, ultimately assigned and dispersed to global sales teams for action resulting in an <span class="metric-highlight">estimated $7M of revenue</span>.</li>
+                        <li>Led market research and competitive analysis of private equity portfolios and upcoming AI ventures to enhance customer data, uncovering opportunities projected to generate an <span class="metric-highlight">estimated $14M in added revenue</span>.</li>
+                    </ul>
                 </div>
 
                 <div class="exp-card">
@@ -599,9 +598,42 @@
                             <h3 class="exp-title">Junior Research Analyst</h3>
                             <div class="exp-company">Rutgers Consulting Group</div>
                         </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current</div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Dec. 2025</div>
                     </div>
-                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers.</p>
+                    <ul class="exp-bullets">
+                        <li>Analyzed synthetic biology market trends, ethics, and commercialization potential, informing strategy for <span class="metric-highlight">$50M+ sector opportunities</span>.</li>
+                        <li>Led outreach to <span class="metric-highlight">100+ biotech and academic experts</span>, securing diverse stakeholder insights to guide client recommendations.</li>
+                        <li>Co-authored and published a whitepaper on synthetic biology commercialization pathways, <span class="metric-highlight">reaching 250+ industry and academic readers</span>.</li>
+                    </ul>
+                </div>
+
+                <div class="exp-card">
+                    <div class="exp-header">
+                        <div>
+                            <h3 class="exp-title">Business Development Intern</h3>
+                            <div class="exp-company">Stealth AI Startup</div>
+                        </div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">May 2025 - June 2025</div>
+                    </div>
+                    <ul class="exp-bullets">
+                        <li>Researched industry sub-verticals and use cases for <span class="metric-highlight">Small Language Models and custom model development</span>.</li>
+                        <li>Developed a detailed pro-forma operating model, including <span class="metric-highlight">three-year Income Statement projections</span>.</li>
+                        <li>Generated <span class="metric-highlight">150+ qualified leads</span> via ApolloIO, driving <span class="metric-highlight">12% conversion</span> to active sales conversations.</li>
+                        <li>Launched a new WordPress website, attracting <span class="metric-highlight">2 Fortune 100 companies</span> as prospective customers.</li>
+                    </ul>
+                </div>
+                
+                <div class="exp-card">
+                    <div class="exp-header">
+                        <div>
+                            <h3 class="exp-title">Incoming Audit Intern</h3>
+                            <div class="exp-company">EY (Ernst & Young)</div>
+                        </div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Next Summer</div>
+                    </div>
+                    <ul class="exp-bullets">
+                        <li>Secured an upcoming audit internship at a Big Four accounting firm. Preparing to apply <span class="metric-highlight">advanced accounting principles</span>, data analytics, and rigorous financial verification techniques to support enterprise audit operations.</li>
+                    </ul>
                 </div>
 
             </div>
@@ -615,7 +647,7 @@
                 
                 <div class="skill-column">
                     <h3>Finance & Analysis</h3>
-                    <ul class="skill-list">
+                    <ul class="bullet-list">
                         <li>Accounting & Reporting</li>
                         <li>Pro-forma Operating Models</li>
                         <li>Income Statement Projections</li>
@@ -626,7 +658,7 @@
 
                 <div class="skill-column">
                     <h3>Technical Toolset</h3>
-                    <ul class="skill-list">
+                    <ul class="bullet-list">
                         <li>Advanced Excel</li>
                         <li>Tableau & PowerBI</li>
                         <li>Python & Java (Intermediate)</li>
@@ -637,7 +669,7 @@
 
                 <div class="skill-column">
                     <h3>Soft Skills & Strategy</h3>
-                    <ul class="skill-list">
+                    <ul class="bullet-list">
                         <li>Cross-functional Leadership</li>
                         <li>Market Research</li>
                         <li>Client Outreach</li>
@@ -653,76 +685,4 @@
     <section id="contact" class="contact">
         <div class="container" style="padding-top: 0; padding-bottom: 2rem;">
             <h2>Let's Connect</h2>
-            <p style="color: var(--muted-blue); margin-top: 1rem;">Currently seeking new opportunities to drive analytical and strategic impact.</p>
-            
-            <div class="contact-links">
-                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com</a>
-                <a href="https://www.linkedin.com/in/preetiattarde/" target="_blank" class="contact-card">LinkedIn Profile</a>
-            </div>
-            
-            <div style="margin-top: 4rem; color: var(--muted-blue); font-size: 0.875rem;">
-                © 2026 Preeti Attarde. All rights reserved.
-            </div>
-        </div>
-    </section>
-
-    <script>
-        const avatar = document.getElementById('floating-avatar');
-        const placeholder = document.getElementById('avatar-placeholder');
-        let isScrolledState = false;
-
-        // Sync avatar coordinates with the invisible placeholder when at the top of the page
-        function updateAvatarPosition() {
-            if (!document.body.classList.contains('is-scrolled')) {
-                const rect = placeholder.getBoundingClientRect();
-                avatar.style.top = `${rect.top}px`;
-                avatar.style.left = `${rect.left}px`;
-            }
-        }
-
-        // Initialize exact positioning 
-        window.addEventListener('resize', updateAvatarPosition);
-        window.addEventListener('DOMContentLoaded', updateAvatarPosition);
-        window.addEventListener('load', updateAvatarPosition);
-
-        // Core scroll logic handling the state switch
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            
-            // Trigger threshold is 15px down
-            if (scrollY > 15 && !isScrolledState) {
-                isScrolledState = true;
-                
-                // Add animating class for the smooth CSS transition
-                avatar.classList.add('animating');
-                document.body.classList.add('is-scrolled');
-                
-                // Remove inline styles so the !important CSS destination values take over
-                avatar.style.top = '';
-                avatar.style.left = '';
-                
-            } else if (scrollY <= 15 && isScrolledState) {
-                isScrolledState = false;
-                
-                document.body.classList.remove('is-scrolled');
-                
-                // Calculate and apply destination coords immediately so it transitions back smoothly
-                updateAvatarPosition();
-                
-                // Remove the animation class once the transition is complete 
-                // so it can track window resizing instantly without lag
-                setTimeout(() => {
-                    if (!isScrolledState) {
-                        avatar.classList.remove('animating');
-                    }
-                }, 1000); // Wait for the 1s CSS transition to finish
-                
-            } else if (!isScrolledState) {
-                // If the user scrolls between 0px and 14px, keep the avatar perfectly 
-                // glued to the placeholder by continuously tracking its bounding rect.
-                updateAvatarPosition();
-            }
-        });
-    </script>
-</body>
-</html>
+            <p style="color: var(--muted-blue); margin-top: 1rem;">Currently seeking new opportunities to drive analytical and strategic impact
