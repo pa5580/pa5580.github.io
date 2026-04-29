@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preeti Attarde | Finance • Strategy • Creativity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables for Theme */
+        :root {
+            --navy: #0F172A;
+            --navy-light: #1E293B;
+            --white: #FFFFFF;
+            --soft-gray: #F8FAFC;
+            --soft-gray-dark: #E2E8F0;
+            --muted-blue: #64748B;
+            --accent-blue: #3B82F6;
+            --accent-blue-hover: #2563EB;
+            --text-main: #0F172A;
+            --text-secondary: #475569;
+        }
+
+        /* Global Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--white);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Typography Hierarchy */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2.5rem;
+            color: var(--navy);
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            width: 40%;
+            height: 4px;
+            background-color: var(--accent-blue);
+            bottom: -10px;
+            left: 0;
+            border-radius: 2px;
+        }
+
+        p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .citation {
+            font-size: 0.75rem;
+            color: var(--muted-blue);
+            vertical-align: super;
+            font-weight: 500;
+            margin-left: 2px;
+        }
+
+        /* Layout Utilities */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--accent-blue);
+            color: var(--white);
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Navigation (Glassmorphism) */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--navy);
+            letter-spacing: -0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: radial-gradient(circle at 50% -20%, var(--navy-light) 0%, var(--navy) 100%);
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+            padding: 0 2rem;
+        }
+
+        /* Creative Analytical Background Pattern */
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .profile-img {
+            width: 160px;
+            height: 160px;
+            border-radius: 40%; /* Softly rounded crop */
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            transition: transform 0.5s ease;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            color: var(--white);
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--muted-blue);
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* About Section */
+        .about {
+            background-color: var(--white);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .about-stats {
+            background: var(--soft-gray);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--soft-gray-dark);
+            position: relative;
+        }
+
+        /* Experience Section (Cards Layout) */
+        .experience {
+            background-color: var(--soft-gray);
+        }
+
+        .experience-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .exp-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border-left: 6px solid var(--accent-blue);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 150px; height: 150px;
+            background: radial-gradient(circle, var(--soft-gray) 0%, transparent 70%);
+            opacity: 0.5;
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .exp-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .exp-title {
+            font-size: 1.5rem;
+            color: var(--navy);
+            margin: 0;
+        }
+
+        .exp-company {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--muted-blue);
+        }
+
+        .exp-impact {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Skills Section */
+        .skills {
+            background-color: var(--white);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .skill-column {
+            background: var(--soft-gray);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--soft-gray-dark);
+            transition: transform 0.3s ease;
+        }
+
+        .skill-column:hover {
+            transform: translateY(-5px);
+        }
+
+        .skill-column h3 {
+            color: var(--navy);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--soft-gray-dark);
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .skill-list li::before {
+            content: '→';
+            color: var(--accent-blue);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Contact Section */
+        .contact {
+            background-color: var(--navy);
+            color: var(--white);
+            text-align: center;
+            padding: 6rem 2rem;
+        }
+
+        .contact h2 {
+            color: var(--white);
+        }
+
+        .contact h2::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .contact-card {
+            padding: 1.5rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+            .skills-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .nav-links { display: none; } /* Simplified mobile nav */
+            .skills-grid { grid-template-columns: 1fr; }
+            .exp-header { flex-direction: column; }
+            .contact-links { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">PA.</div>
+        <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#experience">Experience</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <img src="Assets/ProfilePic.jpg" alt="Preeti Attarde" class="profile-img">
+            <h1>Preeti Attarde<span class="citation">[cite: 1]</span></h1>
+            <div class="tagline">Finance • Strategy • Creativity</div>
+            <a href="#experience" class="btn">View My Work</a>
+        </div>
+    </header>
+
+    <section id="about" class="about">
+        <div class="container about-grid">
+            <div class="about-text">
+                <h2>About Me</h2>
+                <p>I am pursuing my B.S. in Accounting and Finance at Rutgers University - Rutgers Business School<span class="citation">[cite: 4, 5]</span>, anticipating CPA Eligibility by 2028<span class="citation">[cite: 6]</span>. Operating at the intersection of high-level strategy and actionable data, I possess a strong interest in artificial intelligence and behavioral economics<span class="citation">[cite: 33]</span>.</p>
+                <p>My approach unites the analytical rigor required to maintain a 4.00 GPA<span class="citation">[cite: 7]</span> with the creative problem-solving and collaboration developed through extensive volunteer work and playing the sousaphone in the marching band<span class="citation">[cite: 33]</span>. Whether parsing financial data or researching emerging AI sectors, I leverage data to uncover insights and drive growth.</p>
+            </div>
+            <div class="about-stats">
+                <h3 style="color: var(--navy); margin-bottom: 1rem; font-size: 1.5rem;">Academic Highlights</h3>
+                <ul class="skill-list">
+                    <li><strong>GPA:</strong> 4.00/4.00<span class="citation">[cite: 7]</span></li>
+                    <li><strong>Standardized:</strong> SAT 1570<span class="citation">[cite: 7]</span></li>
+                    <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List<span class="citation">[cite: 8]</span></li>
+                    <li><strong>Location:</strong> New Brunswick, NJ<span class="citation">[cite: 2]</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="experience">
+        <div class="container">
+            <h2>Experience & Impact</h2>
+            
+            <div class="experience-grid">
+                
+                <div class="exp-card">
+                    <div class="exp-header">
+                        <div>
+                            <h3 class="exp-title">Incoming Audit Intern</h3>
+                            <div class="exp-company">EY (Ernst & Young)</div>
+                        </div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Next Summer</div>
+                    </div>
+                    <p class="exp-impact">Secured an upcoming audit internship at a Big Four accounting firm. Preparing to apply advanced accounting principles, data analytics, and rigorous financial verification techniques to support enterprise audit operations.</p>
+                </div>
+
+                <div class="exp-card">
+                    <div class="exp-header">
+                        <div>
+                            <h3 class="exp-title">Lead Business Operations Intern<span class="citation">[cite: 11]</span></h3>
+                            <div class="exp-company">CommVault Systems<span class="citation">[cite: 10]</span></div>
+                        </div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current<span class="citation">[cite: 15]</span></div>
+                    </div>
+                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy<span class="citation">[cite: 17]</span>. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue<span class="citation">[cite: 18]</span>. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue<span class="citation">[cite: 19]</span>.</p>
+                </div>
+
+                <div class="exp-card">
+                    <div class="exp-header">
+                        <div>
+                            <h3 class="exp-title">Junior Research Analyst<span class="citation">[cite: 20]</span></h3>
+                            <div class="exp-company">Rutgers Consulting Group<span class="citation">[cite: 20]</span></div>
+                        </div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current<span class="citation">[cite: 21]</span></div>
+                    </div>
+                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities<span class="citation">[cite: 22]</span>. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights<span class="citation">[cite: 23]</span>, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers<span class="citation">[cite: 25]</span>.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="skills">
+        <div class="container">
+            <h2>Core Competencies</h2>
+            <div class="skills-grid">
+                
+                <div class="skill-column">
+                    <h3>Finance & Analysis</h3>
+                    <ul class="skill-list">
+                        <li>Accounting & Reporting<span class="citation">[cite: 5]</span></li>
+                        <li>Pro-forma Operating Models<span class="citation">[cite: 30]</span></li>
+                        <li>Income Statement Projections<span class="citation">[cite: 30]</span></li>
+                        <li>Bloomberg Market Concepts<span class="citation">[cite: 33]</span></li>
+                        <li>Synthetic Biology Markets<span class="citation">[cite: 22]</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-column">
+                    <h3>Technical Toolset</h3>
+                    <ul class="skill-list">
+                        <li>Advanced Excel<span class="citation">[cite: 33]</span></li>
+                        <li>Tableau & PowerBI<span class="citation">[cite: 33]</span></li>
+                        <li>Python & Java (Intermediate)<span class="citation">[cite: 33]</span></li>
+                        <li>Salesforce Dashboards<span class="citation">[cite: 16]</span></li>
+                        <li>Small Language Models & AI<span class="citation">[cite: 29]</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-column">
+                    <h3>Soft Skills & Strategy</h3>
+                    <ul class="skill-list">
+                        <li>Cross-functional Leadership<span class="citation">[cite: 19]</span></li>
+                        <li>Market Research<span class="citation">[cite: 19]</span></li>
+                        <li>Client Outreach<span class="citation">[cite: 23]</span></li>
+                        <li>Whitepaper Authorship<span class="citation">[cite: 25]</span></li>
+                        <li>Business Development<span class="citation">[cite: 27]</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container" style="padding-top: 0; padding-bottom: 2rem;">
+            <h2>Let's Connect</h2>
+            <p style="color: var(--muted-blue); margin-top: 1rem;">Currently seeking new opportunities to drive analytical and strategic impact.</p>
+            
+            <div class="contact-links">
+                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com<span class="citation">[cite: 2]</span></a>
+                <a href="#" class="contact-card">LinkedIn Profile</a>
+            </div>
+            
+            <div style="margin-top: 4rem; color: var(--muted-blue); font-size: 0.875rem;">
+                © 2026 Preeti Attarde. All rights reserved.
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
