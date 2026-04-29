@@ -43,6 +43,11 @@
             color: inherit;
         }
 
+        /* Visually hide citations to satisfy design requirements while retaining data integrity */
+        .hidden-cite {
+            display: none !important;
+        }
+
         /* Typography Hierarchy */
         h1, h2, h3, h4 {
             font-weight: 700;
@@ -75,14 +80,6 @@
             margin-bottom: 1rem;
         }
 
-        .citation {
-            font-size: 0.75rem;
-            color: var(--muted-blue);
-            vertical-align: super;
-            font-weight: 500;
-            margin-left: 2px;
-        }
-
         /* Layout Utilities */
         .container {
             max-width: 1200px;
@@ -92,17 +89,34 @@
 
         .btn {
             display: inline-block;
-            padding: 1rem 2rem;
+            padding: 1rem 2.5rem;
             background-color: var(--accent-blue);
             color: var(--white);
             font-weight: 600;
             border-radius: 50px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--accent-blue-hover);
+            z-index: -1;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover::before {
+            transform: scaleX(1);
         }
 
         .btn:hover {
-            background-color: var(--accent-blue-hover);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
         }
@@ -139,71 +153,175 @@
             font-weight: 500;
             color: var(--text-secondary);
             transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            background: var(--accent-blue);
+            bottom: -4px; left: 0;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
         }
 
         .nav-links a:hover {
             color: var(--accent-blue);
         }
 
-        /* Hero Section */
+        /* Hero Section - Upgraded and Dynamic */
         .hero {
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            background: radial-gradient(circle at 50% -20%, var(--navy-light) 0%, var(--navy) 100%);
+            /* Animated Mesh Gradient */
+            background: linear-gradient(-45deg, #0F172A, #1E293B, #0F2027, #203A43, #2C5364);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: var(--white);
             position: relative;
             overflow: hidden;
             padding: 0 2rem;
         }
 
-        /* Creative Analytical Background Pattern */
-        .hero::before {
-            content: "";
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Abstract glowing orbs in background */
+        .hero::before, .hero::after {
+            content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            z-index: 1;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.5;
+            animation: floatOrb 10s infinite alternate ease-in-out;
+        }
+
+        .hero::before {
+            width: 400px; height: 400px;
+            background: rgba(59, 130, 246, 0.3); /* Accent blue glow */
+            top: -100px; left: -100px;
+        }
+
+        .hero::after {
+            width: 300px; height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            bottom: -50px; right: -50px;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
         }
 
         .hero-content {
             position: relative;
             z-index: 2;
-            animation: fadeIn 1s ease-out forwards;
+            animation: fadeInUP 1s ease-out forwards;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Floating Profile Picture Container */
+        .profile-container {
+            position: relative;
+            margin-bottom: 2rem;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
         }
 
         .profile-img {
-            width: 160px;
-            height: 160px;
-            border-radius: 40%; /* Softly rounded crop */
+            width: 170px;
+            height: 170px;
+            border-radius: 35%; /* Soft squircle shape */
             object-fit: cover;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            margin-bottom: 2rem;
-            transition: transform 0.5s ease;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .profile-img:hover {
-            transform: scale(1.05) rotate(2deg);
+        .profile-container:hover .profile-img {
+            transform: scale(1.05) rotate(3deg);
+            border-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        /* Glassmorphism Badge */
+        .status-badge {
+            position: absolute;
+            bottom: -10px;
+            right: -20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--white);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            background-color: #4ADE80; /* Green indicator */
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4ADE80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
         }
 
         .hero h1 {
-            font-size: 4rem;
+            font-size: 4.5rem;
             margin-bottom: 0.5rem;
             color: var(--white);
+            letter-spacing: -0.03em;
         }
 
         .tagline {
             font-size: 1.5rem;
             font-weight: 300;
-            color: var(--muted-blue);
-            margin-bottom: 2.5rem;
+            color: #CBD5E1; /* Lighter muted blue for contrast */
+            margin-bottom: 3rem;
             letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tagline span {
+            display: inline-block;
+        }
+        
+        .tagline .separator {
+            color: var(--accent-blue);
+            font-weight: 800;
         }
 
         /* About Section */
@@ -390,24 +508,23 @@
         }
 
         /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUP {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* Responsive Design */
         @media (max-width: 992px) {
-            .about-grid {
-                grid-template-columns: 1fr;
-            }
-            .skills-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .about-grid { grid-template-columns: 1fr; }
+            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero h1 { font-size: 3.5rem; }
         }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
-            .nav-links { display: none; } /* Simplified mobile nav */
+            .hero h1 { font-size: 2.8rem; }
+            .tagline { flex-direction: column; gap: 0.5rem; font-size: 1.25rem; }
+            .tagline .separator { display: none; }
+            .nav-links { display: none; }
             .skills-grid { grid-template-columns: 1fr; }
             .exp-header { flex-direction: column; }
             .contact-links { flex-direction: column; align-items: center; }
@@ -428,9 +545,24 @@
 
     <header class="hero">
         <div class="hero-content">
-            <img src="Assets/ProfilePic.jpg" alt="Preeti Attarde" class="profile-img">
-            <h1>Preeti Attarde<span class="citation">[cite: 1]</span></h1>
-            <div class="tagline">Finance • Strategy • Creativity</div>
+            <div class="profile-container">
+                <img src="Assets/ProfilePic.jpg" alt="Preeti Attarde" class="profile-img">
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    Available '26
+                </div>
+            </div>
+            
+            <h1>Preeti Attarde<span class="hidden-cite">[cite: 1]</span></h1>
+            
+            <div class="tagline">
+                <span>Finance</span>
+                <span class="separator">•</span>
+                <span>Strategy</span>
+                <span class="separator">•</span>
+                <span>Creativity</span>
+            </div>
+            
             <a href="#experience" class="btn">View My Work</a>
         </div>
     </header>
@@ -439,16 +571,16 @@
         <div class="container about-grid">
             <div class="about-text">
                 <h2>About Me</h2>
-                <p>I am pursuing my B.S. in Accounting and Finance at Rutgers University - Rutgers Business School<span class="citation">[cite: 4, 5]</span>, anticipating CPA Eligibility by 2028<span class="citation">[cite: 6]</span>. Operating at the intersection of high-level strategy and actionable data, I possess a strong interest in artificial intelligence and behavioral economics<span class="citation">[cite: 33]</span>.</p>
-                <p>My approach unites the analytical rigor required to maintain a 4.00 GPA<span class="citation">[cite: 7]</span> with the creative problem-solving and collaboration developed through extensive volunteer work and playing the sousaphone in the marching band<span class="citation">[cite: 33]</span>. Whether parsing financial data or researching emerging AI sectors, I leverage data to uncover insights and drive growth.</p>
+                <p>I am pursuing my B.S. in Accounting and Finance at Rutgers University - Rutgers Business School<span class="hidden-cite">[cite: 4, 5]</span>, anticipating CPA Eligibility by 2028<span class="hidden-cite">[cite: 6]</span>. Operating at the intersection of high-level strategy and actionable data, I possess a strong interest in artificial intelligence and behavioral economics<span class="hidden-cite">[cite: 33]</span>.</p>
+                <p>My approach unites the analytical rigor required to maintain a 4.00 GPA<span class="hidden-cite">[cite: 7]</span> with the creative problem-solving and collaboration developed through extensive volunteer work and playing the sousaphone in the marching band<span class="hidden-cite">[cite: 33]</span>. Whether parsing financial data or researching emerging AI sectors, I leverage data to uncover insights and drive growth.</p>
             </div>
             <div class="about-stats">
                 <h3 style="color: var(--navy); margin-bottom: 1rem; font-size: 1.5rem;">Academic Highlights</h3>
                 <ul class="skill-list">
-                    <li><strong>GPA:</strong> 4.00/4.00<span class="citation">[cite: 7]</span></li>
-                    <li><strong>Standardized:</strong> SAT 1570<span class="citation">[cite: 7]</span></li>
-                    <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List<span class="citation">[cite: 8]</span></li>
-                    <li><strong>Location:</strong> New Brunswick, NJ<span class="citation">[cite: 2]</span></li>
+                    <li><strong>GPA:</strong> 4.00/4.00<span class="hidden-cite">[cite: 7]</span></li>
+                    <li><strong>Standardized:</strong> SAT 1570<span class="hidden-cite">[cite: 7]</span></li>
+                    <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List<span class="hidden-cite">[cite: 8]</span></li>
+                    <li><strong>Location:</strong> New Brunswick, NJ<span class="hidden-cite">[cite: 2]</span></li>
                 </ul>
             </div>
         </div>
@@ -474,23 +606,23 @@
                 <div class="exp-card">
                     <div class="exp-header">
                         <div>
-                            <h3 class="exp-title">Lead Business Operations Intern<span class="citation">[cite: 11]</span></h3>
-                            <div class="exp-company">CommVault Systems<span class="citation">[cite: 10]</span></div>
+                            <h3 class="exp-title">Lead Business Operations Intern<span class="hidden-cite">[cite: 11]</span></h3>
+                            <div class="exp-company">CommVault Systems<span class="hidden-cite">[cite: 10]</span></div>
                         </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current<span class="citation">[cite: 15]</span></div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current<span class="hidden-cite">[cite: 15]</span></div>
                     </div>
-                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy<span class="citation">[cite: 17]</span>. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue<span class="citation">[cite: 18]</span>. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue<span class="citation">[cite: 19]</span>.</p>
+                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy<span class="hidden-cite">[cite: 17]</span>. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue<span class="hidden-cite">[cite: 18]</span>. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue<span class="hidden-cite">[cite: 19]</span>.</p>
                 </div>
 
                 <div class="exp-card">
                     <div class="exp-header">
                         <div>
-                            <h3 class="exp-title">Junior Research Analyst<span class="citation">[cite: 20]</span></h3>
-                            <div class="exp-company">Rutgers Consulting Group<span class="citation">[cite: 20]</span></div>
+                            <h3 class="exp-title">Junior Research Analyst<span class="hidden-cite">[cite: 20]</span></h3>
+                            <div class="exp-company">Rutgers Consulting Group<span class="hidden-cite">[cite: 20]</span></div>
                         </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current<span class="citation">[cite: 21]</span></div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current<span class="hidden-cite">[cite: 21]</span></div>
                     </div>
-                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities<span class="citation">[cite: 22]</span>. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights<span class="citation">[cite: 23]</span>, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers<span class="citation">[cite: 25]</span>.</p>
+                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities<span class="hidden-cite">[cite: 22]</span>. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights<span class="hidden-cite">[cite: 23]</span>, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers<span class="hidden-cite">[cite: 25]</span>.</p>
                 </div>
 
             </div>
@@ -505,33 +637,33 @@
                 <div class="skill-column">
                     <h3>Finance & Analysis</h3>
                     <ul class="skill-list">
-                        <li>Accounting & Reporting<span class="citation">[cite: 5]</span></li>
-                        <li>Pro-forma Operating Models<span class="citation">[cite: 30]</span></li>
-                        <li>Income Statement Projections<span class="citation">[cite: 30]</span></li>
-                        <li>Bloomberg Market Concepts<span class="citation">[cite: 33]</span></li>
-                        <li>Synthetic Biology Markets<span class="citation">[cite: 22]</span></li>
+                        <li>Accounting & Reporting<span class="hidden-cite">[cite: 5]</span></li>
+                        <li>Pro-forma Operating Models<span class="hidden-cite">[cite: 30]</span></li>
+                        <li>Income Statement Projections<span class="hidden-cite">[cite: 30]</span></li>
+                        <li>Bloomberg Market Concepts<span class="hidden-cite">[cite: 33]</span></li>
+                        <li>Synthetic Biology Markets<span class="hidden-cite">[cite: 22]</span></li>
                     </ul>
                 </div>
 
                 <div class="skill-column">
                     <h3>Technical Toolset</h3>
                     <ul class="skill-list">
-                        <li>Advanced Excel<span class="citation">[cite: 33]</span></li>
-                        <li>Tableau & PowerBI<span class="citation">[cite: 33]</span></li>
-                        <li>Python & Java (Intermediate)<span class="citation">[cite: 33]</span></li>
-                        <li>Salesforce Dashboards<span class="citation">[cite: 16]</span></li>
-                        <li>Small Language Models & AI<span class="citation">[cite: 29]</span></li>
+                        <li>Advanced Excel<span class="hidden-cite">[cite: 33]</span></li>
+                        <li>Tableau & PowerBI<span class="hidden-cite">[cite: 33]</span></li>
+                        <li>Python & Java (Intermediate)<span class="hidden-cite">[cite: 33]</span></li>
+                        <li>Salesforce Dashboards<span class="hidden-cite">[cite: 16]</span></li>
+                        <li>Small Language Models & AI<span class="hidden-cite">[cite: 29]</span></li>
                     </ul>
                 </div>
 
                 <div class="skill-column">
                     <h3>Soft Skills & Strategy</h3>
                     <ul class="skill-list">
-                        <li>Cross-functional Leadership<span class="citation">[cite: 19]</span></li>
-                        <li>Market Research<span class="citation">[cite: 19]</span></li>
-                        <li>Client Outreach<span class="citation">[cite: 23]</span></li>
-                        <li>Whitepaper Authorship<span class="citation">[cite: 25]</span></li>
-                        <li>Business Development<span class="citation">[cite: 27]</span></li>
+                        <li>Cross-functional Leadership<span class="hidden-cite">[cite: 11]</span></li>
+                        <li>Market Research<span class="hidden-cite">[cite: 19]</span></li>
+                        <li>Client Outreach<span class="hidden-cite">[cite: 23]</span></li>
+                        <li>Whitepaper Authorship<span class="hidden-cite">[cite: 25]</span></li>
+                        <li>Business Development<span class="hidden-cite">[cite: 27]</span></li>
                     </ul>
                 </div>
 
@@ -545,7 +677,7 @@
             <p style="color: var(--muted-blue); margin-top: 1rem;">Currently seeking new opportunities to drive analytical and strategic impact.</p>
             
             <div class="contact-links">
-                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com<span class="citation">[cite: 2]</span></a>
+                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com<span class="hidden-cite">[cite: 2]</span></a>
                 <a href="#" class="contact-card">LinkedIn Profile</a>
             </div>
             
