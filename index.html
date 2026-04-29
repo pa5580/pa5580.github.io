@@ -43,11 +43,6 @@
             color: inherit;
         }
 
-        /* Visually hide citations to satisfy design requirements while retaining data integrity */
-        .hidden-cite {
-            display: none !important;
-        }
-
         /* Typography Hierarchy */
         h1, h2, h3, h4 {
             font-weight: 700;
@@ -126,22 +121,28 @@
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 1.5rem 2rem;
+            padding: 1.2rem 2rem;
             background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.6);
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            opacity: 0; /* Hidden initially, fades in on scroll */
+            transform: translateY(-100%);
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .logo {
-            font-weight: 800;
-            font-size: 1.25rem;
-            color: var(--navy);
-            letter-spacing: -0.05em;
+        body.is-scrolled nav {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nav-logo-spacer {
+            width: 45px; 
+            height: 45px;
         }
 
         .nav-links {
@@ -173,128 +174,116 @@
             color: var(--accent-blue);
         }
 
-        /* Hero Section - Upgraded and Dynamic */
+        /* * ==========================================
+         * DYNAMIC HERO & SCROLL TRANSITION
+         * ==========================================
+         */
+        
         .hero {
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            /* Animated Mesh Gradient */
-            background: linear-gradient(-45deg, #0F172A, #1E293B, #0F2027, #203A43, #2C5364);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: var(--white);
             position: relative;
+            color: var(--white);
             overflow: hidden;
-            padding: 0 2rem;
+            background-color: var(--white); /* The actual background is white, revealed on split */
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Abstract glowing orbs in background */
-        .hero::before, .hero::after {
-            content: '';
+        /* The Dramatic Split Background Panels */
+        .hero-bg-left, .hero-bg-right {
             position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
+            top: 0; bottom: 0;
+            width: 50%;
+            background: linear-gradient(135deg, var(--navy-light), var(--navy));
             z-index: 0;
-            opacity: 0.5;
-            animation: floatOrb 10s infinite alternate ease-in-out;
+            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
         }
 
-        .hero::before {
-            width: 400px; height: 400px;
-            background: rgba(59, 130, 246, 0.3); /* Accent blue glow */
-            top: -100px; left: -100px;
+        .hero-bg-left { 
+            left: 0; 
+            border-right: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        
+        .hero-bg-right { 
+            right: 0; 
+            border-left: 1px solid rgba(255, 255, 255, 0.05); 
         }
 
-        .hero::after {
-            width: 300px; height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            bottom: -50px; right: -50px;
-            animation-delay: -5s;
+        /* Subtle analytic grid on the dark panels */
+        .hero-bg-left::before, .hero-bg-right::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
-        @keyframes floatOrb {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 50px) scale(1.1); }
+        /* Split Trigger */
+        body.is-scrolled .hero-bg-left {
+            transform: translateX(-100%);
+        }
+        body.is-scrolled .hero-bg-right {
+            transform: translateX(100%);
         }
 
         .hero-content {
             position: relative;
             z-index: 2;
-            animation: fadeInUP 1s ease-out forwards;
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        /* Floating Profile Picture Container */
-        .profile-container {
-            position: relative;
-            margin-bottom: 2rem;
-            animation: float 6s ease-in-out infinite;
+        body.is-scrolled .hero-content {
+            opacity: 0;
+            transform: translateY(-40px);
+            pointer-events: none;
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .profile-img {
+        /* The Avatar Placeholder (reserves space in hero) */
+        #avatar-placeholder {
             width: 170px;
             height: 170px;
-            border-radius: 35%; /* Soft squircle shape */
+            margin-bottom: 2rem;
+        }
+
+        /* The Floating Avatar (Slides to Nav) */
+        #floating-avatar {
+            position: fixed;
+            z-index: 1001; /* Above navbar */
+            width: 170px;
+            height: 170px;
+            border-radius: 35%; /* Squircle */
             object-fit: cover;
             border: 4px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Tracks JS instantly by default to prevent jitter */
+            transition: none; 
         }
 
-        .profile-container:hover .profile-img {
-            transform: scale(1.05) rotate(3deg);
-            border-color: rgba(255, 255, 255, 0.4);
+        /* Class added via JS ONLY when animating to/from the nav bar */
+        #floating-avatar.animating {
+            transition: top 1s cubic-bezier(0.77, 0, 0.175, 1),
+                        left 1s cubic-bezier(0.77, 0, 0.175, 1),
+                        width 1s cubic-bezier(0.77, 0, 0.175, 1),
+                        height 1s cubic-bezier(0.77, 0, 0.175, 1),
+                        border-radius 1s ease,
+                        border-color 1s ease,
+                        box-shadow 1s ease,
+                        transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        body.is-scrolled #floating-avatar {
+            top: 15px !important;
+            left: 32px !important;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-        }
-
-        /* Glassmorphism Badge */
-        .status-badge {
-            position: absolute;
-            bottom: -10px;
-            right: -20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--white);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 8px; height: 8px;
-            background-color: #4ADE80; /* Green indicator */
-            border-radius: 50%;
-            box-shadow: 0 0 10px #4ADE80;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+            border-width: 2px;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .hero h1 {
@@ -307,7 +296,7 @@
         .tagline {
             font-size: 1.5rem;
             font-weight: 300;
-            color: #CBD5E1; /* Lighter muted blue for contrast */
+            color: #CBD5E1; 
             margin-bottom: 3rem;
             letter-spacing: 0.05em;
             display: flex;
@@ -315,10 +304,6 @@
             gap: 1rem;
         }
 
-        .tagline span {
-            display: inline-block;
-        }
-        
         .tagline .separator {
             color: var(--accent-blue);
             font-weight: 800;
@@ -327,6 +312,8 @@
         /* About Section */
         .about {
             background-color: var(--white);
+            position: relative;
+            z-index: 10;
         }
 
         .about-grid {
@@ -507,12 +494,6 @@
             border-color: var(--accent-blue);
         }
 
-        /* Animations */
-        @keyframes fadeInUP {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         /* Responsive Design */
         @media (max-width: 992px) {
             .about-grid { grid-template-columns: 1fr; }
@@ -524,17 +505,21 @@
             .hero h1 { font-size: 2.8rem; }
             .tagline { flex-direction: column; gap: 0.5rem; font-size: 1.25rem; }
             .tagline .separator { display: none; }
-            .nav-links { display: none; }
+            .nav-links { display: none; } /* Simplified mobile nav */
             .skills-grid { grid-template-columns: 1fr; }
             .exp-header { flex-direction: column; }
             .contact-links { flex-direction: column; align-items: center; }
+            body.is-scrolled #floating-avatar { left: 16px !important; }
+            nav { padding: 1.2rem 1rem; }
         }
     </style>
 </head>
 <body>
 
+    <img id="floating-avatar" src="Assets/ProfilePic.jpg" alt="Preeti Attarde">
+
     <nav>
-        <div class="logo">PA.</div>
+        <div class="nav-logo-spacer"></div>
         <div class="nav-links">
             <a href="#about">About</a>
             <a href="#experience">Experience</a>
@@ -544,17 +529,12 @@
     </nav>
 
     <header class="hero">
+        <div class="hero-bg-left"></div>
+        <div class="hero-bg-right"></div>
+        
         <div class="hero-content">
-            <div class="profile-container">
-                <img src="Assets/ProfilePic.jpg" alt="Preeti Attarde" class="profile-img">
-                <div class="status-badge">
-                    <div class="status-dot"></div>
-                    Available '26
-                </div>
-            </div>
-            
-            <h1>Preeti Attarde<span class="hidden-cite">[cite: 1]</span></h1>
-            
+            <div id="avatar-placeholder"></div>
+            <h1>Preeti Attarde</h1>
             <div class="tagline">
                 <span>Finance</span>
                 <span class="separator">•</span>
@@ -562,7 +542,6 @@
                 <span class="separator">•</span>
                 <span>Creativity</span>
             </div>
-            
             <a href="#experience" class="btn">View My Work</a>
         </div>
     </header>
@@ -571,16 +550,16 @@
         <div class="container about-grid">
             <div class="about-text">
                 <h2>About Me</h2>
-                <p>I am pursuing my B.S. in Accounting and Finance at Rutgers University - Rutgers Business School<span class="hidden-cite">[cite: 4, 5]</span>, anticipating CPA Eligibility by 2028<span class="hidden-cite">[cite: 6]</span>. Operating at the intersection of high-level strategy and actionable data, I possess a strong interest in artificial intelligence and behavioral economics<span class="hidden-cite">[cite: 33]</span>.</p>
-                <p>My approach unites the analytical rigor required to maintain a 4.00 GPA<span class="hidden-cite">[cite: 7]</span> with the creative problem-solving and collaboration developed through extensive volunteer work and playing the sousaphone in the marching band<span class="hidden-cite">[cite: 33]</span>. Whether parsing financial data or researching emerging AI sectors, I leverage data to uncover insights and drive growth.</p>
+                <p>I am pursuing my B.S. in Accounting and Finance at Rutgers University - Rutgers Business School, anticipating CPA Eligibility by 2028. Operating at the intersection of high-level strategy and actionable data, I possess a strong interest in artificial intelligence and behavioral economics.</p>
+                <p>My approach unites the analytical rigor required to maintain a 4.00 GPA with the creative problem-solving and collaboration developed through extensive volunteer work and playing the sousaphone in the marching band. Whether parsing financial data or researching emerging AI sectors, I leverage data to uncover insights and drive growth.</p>
             </div>
             <div class="about-stats">
                 <h3 style="color: var(--navy); margin-bottom: 1rem; font-size: 1.5rem;">Academic Highlights</h3>
                 <ul class="skill-list">
-                    <li><strong>GPA:</strong> 4.00/4.00<span class="hidden-cite">[cite: 7]</span></li>
-                    <li><strong>Standardized:</strong> SAT 1570<span class="hidden-cite">[cite: 7]</span></li>
-                    <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List<span class="hidden-cite">[cite: 8]</span></li>
-                    <li><strong>Location:</strong> New Brunswick, NJ<span class="hidden-cite">[cite: 2]</span></li>
+                    <li><strong>GPA:</strong> 4.00/4.00</li>
+                    <li><strong>Standardized:</strong> SAT 1570</li>
+                    <li><strong>Honors:</strong> Honors College, Dean's Scholarship, Dean's List</li>
+                    <li><strong>Location:</strong> New Brunswick, NJ</li>
                 </ul>
             </div>
         </div>
@@ -606,23 +585,23 @@
                 <div class="exp-card">
                     <div class="exp-header">
                         <div>
-                            <h3 class="exp-title">Lead Business Operations Intern<span class="hidden-cite">[cite: 11]</span></h3>
-                            <div class="exp-company">CommVault Systems<span class="hidden-cite">[cite: 10]</span></div>
+                            <h3 class="exp-title">Lead Business Operations Intern</h3>
+                            <div class="exp-company">CommVault Systems</div>
                         </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current<span class="hidden-cite">[cite: 15]</span></div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Feb. 2025 - Current</div>
                     </div>
-                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy<span class="hidden-cite">[cite: 17]</span>. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue<span class="hidden-cite">[cite: 18]</span>. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue<span class="hidden-cite">[cite: 19]</span>.</p>
+                    <p class="exp-impact">Facilitated the modernization of the go-to-market tech stack by integrating AI-driven tools, resulting in improved forecast accuracy. Conducted critical data validation that dispersed actionable insights to global sales teams, resulting in an estimated $7M of revenue. Additionally led market research uncovering AI and private equity opportunities projected to generate an estimated $14M in added revenue.</p>
                 </div>
 
                 <div class="exp-card">
                     <div class="exp-header">
                         <div>
-                            <h3 class="exp-title">Junior Research Analyst<span class="hidden-cite">[cite: 20]</span></h3>
-                            <div class="exp-company">Rutgers Consulting Group<span class="hidden-cite">[cite: 20]</span></div>
+                            <h3 class="exp-title">Junior Research Analyst</h3>
+                            <div class="exp-company">Rutgers Consulting Group</div>
                         </div>
-                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current<span class="hidden-cite">[cite: 21]</span></div>
+                        <div style="font-weight: 500; color: var(--accent-blue);">Jan. 2025 - Current</div>
                     </div>
-                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities<span class="hidden-cite">[cite: 22]</span>. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights<span class="hidden-cite">[cite: 23]</span>, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers<span class="hidden-cite">[cite: 25]</span>.</p>
+                    <p class="exp-impact">Analyzed synthetic biology market trends and ethics to inform strategic planning for $50M+ sector opportunities. Drove comprehensive outreach to over 100 industry experts to secure diverse stakeholder insights, culminating in co-authoring a whitepaper that reached 250+ academic and industry readers.</p>
                 </div>
 
             </div>
@@ -637,33 +616,33 @@
                 <div class="skill-column">
                     <h3>Finance & Analysis</h3>
                     <ul class="skill-list">
-                        <li>Accounting & Reporting<span class="hidden-cite">[cite: 5]</span></li>
-                        <li>Pro-forma Operating Models<span class="hidden-cite">[cite: 30]</span></li>
-                        <li>Income Statement Projections<span class="hidden-cite">[cite: 30]</span></li>
-                        <li>Bloomberg Market Concepts<span class="hidden-cite">[cite: 33]</span></li>
-                        <li>Synthetic Biology Markets<span class="hidden-cite">[cite: 22]</span></li>
+                        <li>Accounting & Reporting</li>
+                        <li>Pro-forma Operating Models</li>
+                        <li>Income Statement Projections</li>
+                        <li>Bloomberg Market Concepts</li>
+                        <li>Synthetic Biology Markets</li>
                     </ul>
                 </div>
 
                 <div class="skill-column">
                     <h3>Technical Toolset</h3>
                     <ul class="skill-list">
-                        <li>Advanced Excel<span class="hidden-cite">[cite: 33]</span></li>
-                        <li>Tableau & PowerBI<span class="hidden-cite">[cite: 33]</span></li>
-                        <li>Python & Java (Intermediate)<span class="hidden-cite">[cite: 33]</span></li>
-                        <li>Salesforce Dashboards<span class="hidden-cite">[cite: 16]</span></li>
-                        <li>Small Language Models & AI<span class="hidden-cite">[cite: 29]</span></li>
+                        <li>Advanced Excel</li>
+                        <li>Tableau & PowerBI</li>
+                        <li>Python & Java (Intermediate)</li>
+                        <li>Salesforce Dashboards</li>
+                        <li>Small Language Models & AI</li>
                     </ul>
                 </div>
 
                 <div class="skill-column">
                     <h3>Soft Skills & Strategy</h3>
                     <ul class="skill-list">
-                        <li>Cross-functional Leadership<span class="hidden-cite">[cite: 11]</span></li>
-                        <li>Market Research<span class="hidden-cite">[cite: 19]</span></li>
-                        <li>Client Outreach<span class="hidden-cite">[cite: 23]</span></li>
-                        <li>Whitepaper Authorship<span class="hidden-cite">[cite: 25]</span></li>
-                        <li>Business Development<span class="hidden-cite">[cite: 27]</span></li>
+                        <li>Cross-functional Leadership</li>
+                        <li>Market Research</li>
+                        <li>Client Outreach</li>
+                        <li>Whitepaper Authorship</li>
+                        <li>Business Development</li>
                     </ul>
                 </div>
 
@@ -677,8 +656,8 @@
             <p style="color: var(--muted-blue); margin-top: 1rem;">Currently seeking new opportunities to drive analytical and strategic impact.</p>
             
             <div class="contact-links">
-                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com<span class="hidden-cite">[cite: 2]</span></a>
-                <a href="#" class="contact-card">LinkedIn Profile</a>
+                <a href="mailto:attardepreeti@gmail.com" class="contact-card">attardepreeti@gmail.com</a>
+                <a href="https://www.linkedin.com/in/preetiattarde/" target="_blank" class="contact-card">LinkedIn Profile</a>
             </div>
             
             <div style="margin-top: 4rem; color: var(--muted-blue); font-size: 0.875rem;">
@@ -687,5 +666,63 @@
         </div>
     </section>
 
+    <script>
+        const avatar = document.getElementById('floating-avatar');
+        const placeholder = document.getElementById('avatar-placeholder');
+        let isScrolledState = false;
+
+        // Sync avatar coordinates with the invisible placeholder when at the top of the page
+        function updateAvatarPosition() {
+            if (!document.body.classList.contains('is-scrolled')) {
+                const rect = placeholder.getBoundingClientRect();
+                avatar.style.top = `${rect.top}px`;
+                avatar.style.left = `${rect.left}px`;
+            }
+        }
+
+        // Initialize exact positioning 
+        window.addEventListener('resize', updateAvatarPosition);
+        window.addEventListener('DOMContentLoaded', updateAvatarPosition);
+        window.addEventListener('load', updateAvatarPosition);
+
+        // Core scroll logic handling the state switch
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            
+            // Trigger threshold is 15px down
+            if (scrollY > 15 && !isScrolledState) {
+                isScrolledState = true;
+                
+                // Add animating class for the smooth CSS transition
+                avatar.classList.add('animating');
+                document.body.classList.add('is-scrolled');
+                
+                // Remove inline styles so the !important CSS destination values take over
+                avatar.style.top = '';
+                avatar.style.left = '';
+                
+            } else if (scrollY <= 15 && isScrolledState) {
+                isScrolledState = false;
+                
+                document.body.classList.remove('is-scrolled');
+                
+                // Calculate and apply destination coords immediately so it transitions back smoothly
+                updateAvatarPosition();
+                
+                // Remove the animation class once the transition is complete 
+                // so it can track window resizing instantly without lag
+                setTimeout(() => {
+                    if (!isScrolledState) {
+                        avatar.classList.remove('animating');
+                    }
+                }, 1000); // Wait for the 1s CSS transition to finish
+                
+            } else if (!isScrolledState) {
+                // If the user scrolls between 0px and 14px, keep the avatar perfectly 
+                // glued to the placeholder by continuously tracking its bounding rect.
+                updateAvatarPosition();
+            }
+        });
+    </script>
 </body>
 </html>
