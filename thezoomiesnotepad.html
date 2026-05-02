@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Zoomies Notepad - Maximum Chaos Edition</title>
+    <style>
+        /* --- THE PAW CURSOR SPREADS EVERYWHERE --- */
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="font-size:20px"><text y="22">🐾</text></svg>') 12 12, auto !important;
+        }
+
+        /* Base Variables (Dark Theme Default) */
+        :root {
+            --bg-color: #121212;
+            --surface: #1e1e1e;
+            --border: #333;
+            --text-main: #f0f0f0;
+            --text-muted: #9ca3af;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --shop: #8b5cf6;
+            --shop-hover: #7c3aed;
+        }
+
+        /* Light Theme Overrides */
+        body.theme-light { --bg-color: #f9fafb; --surface: #ffffff; --border: #d1d5db; --text-main: #111827; --text-muted: #6b7280; }
+        /* Hacker Theme Overrides */
+        body.theme-hacker { --bg-color: #000000; --surface: #0a0a0a; --border: #00ff00; --text-main: #00ff00; --text-muted: #005500; }
+        /* Salmon Theme Overrides */
+        body.theme-salmon { --bg-color: #fff0f5; --surface: #ffe4e1; --border: #ffb6c1; --text-main: #8b0000; --text-muted: #cd5c5c; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden; 
+        }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; z-index: 10; }
+        .top-controls { display: flex; gap: 1rem; }
+
+        .settings-panel {
+            display: flex; gap: 1.5rem; background-color: var(--surface); padding: 0.75rem 1rem;
+            border-radius: 8px; border: 1px solid var(--border); font-size: 0.875rem; align-items: center;
+        }
+
+        .settings-panel select { background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; outline: none; }
+        .hardcore-label { display: flex; align-items: center; gap: 0.5rem; color: var(--danger); font-weight: bold; cursor: pointer; }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; z-index: 10; }
+        .title-area { display: flex; align-items: center; gap: 1rem; }
+        h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+
+        .cat-cam {
+            width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--border);
+            overflow: hidden; background-color: black; transition: border-color 0.3s; flex-shrink: 0;
+        }
+        .cat-cam.sabotage { border-color: var(--danger); }
+        .cat-cam.peace { border-color: var(--success); }
+        .cat-cam.error { border-color: red; box-shadow: 0 0 15px red; }
+        .cat-cam img { width: 100%; height: 100%; object-fit: cover; }
+
+        .dashboard {
+            display: flex; gap: 1.5rem; align-items: center; background-color: var(--surface);
+            padding: 0.75rem 1.5rem; border-radius: 8px; border: 1px solid var(--border);
+        }
+
+        .stat { display: flex; flex-direction: column; align-items: center; min-width: 70px; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .stat-value { font-size: 1.25rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+
+        .idle-timer { color: var(--danger); }
+        .peace-timer { color: var(--success); display: none; }
+
+        button {
+            background-color: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem;
+            border-radius: 6px; font-size: 0.875rem; font-weight: 600; transition: background-color 0.2s, transform 0.1s; cursor: pointer;
+        }
+        button:active:not(:disabled) { transform: scale(0.95); }
+        button:hover:not(:disabled) { background-color: var(--primary-hover); }
+        button:disabled { background-color: var(--border); color: var(--text-muted); opacity: 0.6; cursor: not-allowed; }
+
+        .btn-feed { background-color: var(--accent); color: #000; }
+        .btn-feed:hover:not(:disabled) { background-color: var(--accent-hover); }
+        .btn-shop { background-color: var(--shop); color: white; }
+        .btn-shop:hover:not(:disabled) { background-color: var(--shop-hover); }
+        .btn-clear { background-color: var(--danger); }
+        .btn-clear:hover { background-color: var(--danger-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--surface); }
+
+        .editor-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; z-index: 5; }
+
+        /* Writing Prompt Banner */
+        .prompt-banner {
+            display: none;
+            background-color: var(--surface);
+            border: 1px dashed var(--accent);
+            color: var(--text-main);
+            padding: 1rem;
+            border-radius: 8px 8px 0 0;
+            border-bottom: none;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        .prompt-banner.active { display: block; }
+        .prompt-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: bold; margin-bottom: 0.25rem; display: block; }
+        .btn-close-prompt { position: absolute; top: 0.5rem; right: 0.5rem; background: none; color: var(--text-muted); padding: 0; font-size: 1.2rem; border: none; }
+        .btn-close-prompt:hover { color: var(--danger); background: none; }
+
+        textarea {
+            flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border);
+            padding: 1.5rem; border-radius: 8px; font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+        }
+        .prompt-banner.active + textarea { border-top-left-radius: 0; border-top-right-radius: 0; } /* Seamless connection */
+        textarea:focus { border-color: var(--primary); }
+        textarea:disabled { opacity: 0.7; cursor: not-allowed; }
+        textarea.is-sabotaged { border-color: var(--danger); }
+        
+        /* GACHA REWARD CSS EFFECTS */
+        textarea.golden-halo { box-shadow: 0 0 30px 5px gold !important; border-color: gold !important; }
+        textarea.mega-zoomies { border-color: #a855f7 !important; box-shadow: 0 0 20px #a855f7; animation: pulseZoomies 1s infinite; }
+        @keyframes pulseZoomies { 0% { box-shadow: 0 0 10px #a855f7; } 50% { box-shadow: 0 0 30px #a855f7; } 100% { box-shadow: 0 0 10px #a855f7; } }
+
+        .footer-controls { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; z-index: 10; }
+        .progress-bar { width: 100%; height: 4px; background-color: var(--border); margin-top: 4px; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background-color: var(--accent); width: 0%; transition: width 0.1s; }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s; backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background-color: var(--bg-color); border: 1px solid var(--border); padding: 2rem;
+            border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-content.text-center { text-align: center; }
+        .modal-content h2 { margin-top: 0; color: var(--accent); }
+        .modal-content h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .modal-content p { line-height: 1.5; color: var(--text-muted); }
+        .modal-content ul { color: var(--text-muted); line-height: 1.6; padding-left: 1.5rem; margin-top: 0.5rem;}
+        
+        .why-use-box { background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--primary); padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+        .why-use-box h4 { margin: 0 0 0.5rem 0; color: var(--primary); }
+        .why-use-box ul { margin-bottom: 0; }
+
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .shop-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
+        .shop-info strong { display: block; color: var(--text-main); font-size: 1.1rem; }
+        .shop-info span { display: block; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
+        
+        .gacha-item { border-color: var(--accent); box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.1); }
+        .buy-btn.equipped { background-color: var(--success) !important; color: white !important; }
+
+        .slider-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; margin-top: 1rem; }
+        .slider-header { display: flex; justify-content: space-between; font-weight: 600; }
+        .slider-value { color: var(--primary); }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+
+        .modal-footer { display: flex; justify-content: flex-end; margin-top: 2rem; gap: 1rem; }
+        .close-btn { position: absolute; top: 1rem; right: 1rem; background: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; border: none; padding: 0; }
+        .close-btn:hover { color: var(--danger); background: none; }
+
+        /* --- MYSTERY BOX ANIMATION --- */
+        .gacha-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .box-emoji { font-size: 120px; animation: violentShake 0.15s infinite; }
+        .drum-emojis { font-size: 60px; animation: violentShake 0.1s infinite 0.05s; margin-top: 20px; }
+
+        @keyframes violentShake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            20% { transform: translate(-4px, 0px) rotate(-10deg); }
+            40% { transform: translate(3px, -2px) rotate(10deg); }
+            60% { transform: translate(-4px, 3px) rotate(0deg); }
+            80% { transform: translate(-2px, -2px) rotate(10deg); }
+            100% { transform: translate(2px, 4px) rotate(-10deg); }
+        }
+    </style>
+</head>
+<body class="theme-dark">
+
+    <div class="top-bar">
+        <div class="settings-panel">
+            <label> Theme: 
+                <select id="theme-select">
+                    <option value="dark">Dark (Default)</option>
+                    <option value="light">Light (Blinding)</option>
+                    <option value="hacker">Hacker Mode</option>
+                    <option value="salmon">Salmon (Chaotic)</option>
+                </select>
+            </label>
+            <label class="hardcore-label"><input type="checkbox" id="hardcore-toggle"> ☠️ Hardcore (No Backspace)</label>
+        </div>
+        <div class="top-controls">
+            <button class="btn-outline" id="btn-get-prompt" style="color: var(--accent); border-color: var(--accent);">💡 Need an Idea?</button>
+            <button class="btn-outline" id="btn-open-modal">📖 Rules & Settings</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="title-area">
+            <div class="cat-cam" id="cat-cam-container"><img id="cat-gif" src="https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif" alt="Cat Status"></div>
+            <h1>The Zoomies Notepad</h1>
+        </div>
+        
+        <div class="dashboard">
+            <div class="stat"><span class="stat-label">Cat Treats</span><span class="stat-value" id="treat-count">0</span></div>
+            <div class="stat idle-timer" id="idle-display"><span class="stat-label">Cat Attacks In</span><span class="stat-value" id="idle-time">3.0s</span></div>
+            <div class="stat peace-timer" id="peace-display"><span class="stat-label">Peace Time</span><span class="stat-value" id="peace-time">15s</span></div>
+            <button class="btn-feed" id="btn-feed" disabled>🐟 Feed Cat (15s Peace)</button>
+            <button class="btn-shop" id="btn-open-shop">🛒 Toy Shop</button>
+        </div>
+    </header>
+
+    <div class="editor-container">
+        <div class="prompt-banner" id="prompt-banner">
+            <span class="prompt-label">Current Prompt:</span>
+            <span id="prompt-text"></span>
+            <button class="btn-close-prompt" id="btn-close-prompt">&times;</button>
+        </div>
+        <textarea id="editor" placeholder="Start typing... Don't stop. The cat is watching." spellcheck="false"></textarea>
+        <div class="progress-bar"><div class="progress-fill" id="streak-progress"></div></div>
+    </div>
+
+    <div class="footer-controls">
+        <button class="btn-clear" id="btn-clear">Clear Text</button>
+        <button id="btn-copy">Copy Text</button>
+    </div>
+
+    <div class="modal-overlay" id="instructions-modal">
+        <div class="modal-content">
+            <h2>📜 The Rules of Chaos</h2>
+            <p>Welcome to The Zoomies Notepad. Your goal is to work. The cat's goal is to ruin your work.</p>
+            <ul>
+                <li><strong>Do Not Stop:</strong> Stop typing, and the cat steps on your keyboard.</li>
+                <li><strong>Earn Bribes:</strong> Type continuously to earn Cat Treats.</li>
+                <li><strong>Spend Bribes:</strong> Feed the cat for guaranteed peace, buy permanent cosmetics, or gamble them away on mystery boxes.</li>
+            </ul>
+
+            <div class="why-use-box">
+                <h4>🧠 Why subject yourself to this?</h4>
+                <ul>
+                    <li><strong>Cure Writer's Block:</strong> Panic is the ultimate muse. You can't overthink your prose when you are fighting for your life.</li>
+                    <li><strong>Practice Speed:</strong> Learn to type faster than your own anxiety.</li>
+                    <li><strong>Build Confidence:</strong> If you can write an essay under these hostile conditions, you can write anywhere.</li>
+                </ul>
+            </div>
+
+            <h3>⚙️ Adjust the Torture Level</h3>
+            <div class="slider-group">
+                <div class="slider-header"><span>Idle Timer (Time before attack)</span><span class="slider-value" id="val-timer">3.0s</span></div>
+                <input type="range" id="input-timer" min="1" max="10" step="0.5" value="3">
+            </div>
+            <div class="slider-group">
+                <div class="slider-header"><span>Effort Required (Chars per treat)</span><span class="slider-value" id="val-chars">100 chars</span></div>
+                <input type="range" id="input-chars" min="10" max="500" step="10" value="100">
+            </div>
+            <div class="modal-footer"><button class="close-modal-btn">I Understand</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="shop-modal">
+        <div class="modal-content">
+            <button class="close-btn close-modal-btn">&times;</button>
+            <h2 style="color: var(--shop)">🛒 The Toy Shop</h2>
+            <p>Buy permanent cosmetics or gamble your hard-earned treats away.</p>
+            
+            <div class="shop-grid">
+                <div class="shop-item gacha-item">
+                    <div class="shop-info">
+                        <strong>📦 Suspicious Cardboard Box</strong>
+                        <span>Pure gambling. Could be 60 seconds of peace. Could be instant sabotage.</span>
+                    </div>
+                    <button class="btn-shop buy-btn gacha-btn" data-type="consumable" data-cost="3">Buy (3 Treats)</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="shop-info"><strong>🎊 Confetti Pop</strong><span>Triggers on every treat earned.</span></div>
+                    <button class="btn-shop buy-btn cosmetic-btn" data-type="cosmetic" data-item="confetti">Buy (2 Treats)</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-info"><strong>🐟 Treat Rain</strong><span>Triggers on every treat earned.</span></div>
+                    <button class="btn-shop buy-btn cosmetic-btn" data-type="cosmetic" data-item="rain">Buy (5 Treats)</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-info"><strong>🐈 Kitten Swarm</strong><span>Triggers on every treat earned.</span></div>
+                    <button class="btn-shop buy-btn cosmetic-btn" data-type="cosmetic" data-item="kittens">Buy (10 Treats)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="animation-overlay" style="z-index: 2000;">
+        <div class="gacha-container">
+            <div class="box-emoji">🎁</div>
+            <div class="drum-emojis">🥁🥁</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal" style="z-index: 2001;">
+        <div class="modal-content text-center">
+            <h2 id="result-title">Result Title</h2>
+            <p id="result-desc">Result Description</p>
+            <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
+                <button id="btn-close-result" style="width: 100%;">Accept Your Fate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const editor = document.getElementById('editor');
+        const treatCountEl = document.getElementById('treat-count');
+        const btnFeed = document.getElementById('btn-feed');
+        const idleTimeEl = document.getElementById('idle-time');
+        const peaceTimeEl = document.getElementById('peace-time');
+        const streakProgress = document.getElementById('streak-progress');
+        const catGif = document.getElementById('cat-gif');
+        const catCamContainer = document.getElementById('cat-cam-container');
+        
+        // Modals & Banners
+        const instructionsModal = document.getElementById('instructions-modal');
+        const shopModal = document.getElementById('shop-modal');
+        const animationOverlay = document.getElementById('animation-overlay');
+        const resultModal = document.getElementById('result-modal');
+        const promptBanner = document.getElementById('prompt-banner');
+        const promptText = document.getElementById('prompt-text');
+
+        // GIF URLs
+        const GIF_WATCHING = "https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif";
+        const GIF_TYPING = "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif";
+        const GIF_EATING = "https://media3.giphy.com/media/v1.Y2lkPTZjMDliOTUyZ2szbWp3MGJkMjF5dnBkNDU0ZmJxeGJ0anI2Z3JibW9uOW53b2tjcyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12cYyFxlbIgXeg/giphy.gif";
+
+        // MUTABLE GAME CONSTANTS
+        let baseIdleLimitMs = 3000; 
+        let charsPerTreat = 100;
+        const SABOTAGE_RATE_MS = 1500;
+        const PEACE_DURATION_SEC = 15; 
+        
+        // State Variables
+        let catTreats = 0;
+        let streak = 0;
+        let hasStarted = false;
+        let isPeaceTime = false;
+        let isSabotaging = false;
+        let isBoxOpening = false;
+        let isMegaZoomies = false; 
+        
+        let peaceSeconds = 0;
+        let idleTimeLeft = baseIdleLimitMs;
+        let lastInputTime = 0;
+        let updateTimer = null;
+        let sabotageInterval = null;
+        let peaceTimerInterval = null;
+
+        // Shop State
+        const shopState = { confetti: { cost: 2, owned: false }, rain: { cost: 5, owned: false }, kittens: { cost: 10, owned: false } };
+        let activeCosmetic = null;
+
+        const catStrings = ["aassddffffffff", "meow meow meow ", "[CAPSLOCK ON]", "1111111222222", "🐈🐾🐾🐾", " FEED ME TUNA ", "jsdfkljsdf", " purrrrrrrrr "];
+
+        // Writing Prompts Array
+        const writingPrompts = [
+            "Write a furious, 1-star Yelp review for a restaurant that serves abstract concepts instead of food.",
+            "You are a cat. Explain to your diary why the human typing on this keyboard must be stopped.",
+            "Describe the color blue to an alien who communicates entirely through taste.",
+            "Write an email to your boss explaining why your task is late, but you can only use excuses related to time travel.",
+            "Your reflection just blinked at you. What do you do next?",
+            "Explain the concept of the internet to a medieval peasant using only farming analogies.",
+            "Write a monologue from the perspective of a sentient, incredibly depressed Roomba.",
+            "You found a door in your house that wasn't there yesterday. What's behind it?",
+            "Write a scene where two people are arguing, but they are both trying to be overly polite."
+        ];
+
+        // --- Instructions & Settings ---
+        document.getElementById('btn-open-modal').addEventListener('click', () => instructionsModal.classList.add('active'));
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+                if(!isBoxOpening) editor.focus();
+            });
+        });
+
+        document.getElementById('input-timer').addEventListener('input', (e) => {
+            baseIdleLimitMs = parseFloat(e.target.value) * 1000;
+            document.getElementById('val-timer').innerText = `${(baseIdleLimitMs/1000).toFixed(1)}s`;
+            if(!hasStarted && !isMegaZoomies) { idleTimeLeft = baseIdleLimitMs; updateUI(); }
+        });
+
+        document.getElementById('input-chars').addEventListener('input', (e) => {
+            charsPerTreat = parseInt(e.target.value);
+            document.getElementById('val-chars').innerText = `${charsPerTreat} chars`;
+            updateUI(); 
+        });
+
+        document.getElementById('theme-select').addEventListener('change', (e) => document.body.className = `theme-${e.target.value}`);
+
+        // Hardcore Mode Check
+        editor.addEventListener('keydown', (e) => {
+            if (document.getElementById('hardcore-toggle').checked && (e.key === 'Backspace' || e.key === 'Delete')) {
+                e.preventDefault(); 
+                catCamContainer.classList.add('error');
+                setTimeout(() => catCamContainer.classList.remove('error'), 200);
+            }
+        });
+
+        // --- Prompt Generator ---
+        document.getElementById('btn-get-prompt').addEventListener('click', () => {
+            const randomPrompt = writingPrompts[Math.floor(Math.random() * writingPrompts.length)];
+            promptText.innerText = randomPrompt;
+            promptBanner.classList.add('active');
+            editor.focus();
+        });
+
+        document.getElementById('btn-close-prompt').addEventListener('click', () => {
+            promptBanner.classList.remove('active');
+            editor.focus();
+        });
+
+        // --- Shop & Gacha Logic ---
+        document.getElementById('btn-open-shop').addEventListener('click', () => { updateShopUI(); shopModal.classList.add('active'); });
+
+        // Mystery Box Button
+        document.querySelector('.gacha-btn').addEventListener('click', (e) => {
+            let cost = parseInt(e.target.dataset.cost);
+            if (catTreats >= cost) {
+                catTreats -= cost;
+                shopModal.classList.remove('active');
+                updateUI(); 
+                startMysteryBox();
+            }
+        });
+
+        // Cosmetic Buttons
+        document.querySelectorAll('.cosmetic-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                let item = btn.dataset.item;
+                let data = shopState[item];
+                if (!data.owned && catTreats >= data.cost) {
+                    catTreats -= data.cost;
+                    data.owned = true;
+                    activeCosmetic = item; 
+                } else if (data.owned) {
+                    activeCosmetic = (activeCosmetic === item) ? null : item;
+                }
+                updateUI(); updateShopUI();
+            });
+        });
+
+        function updateShopUI() {
+            // Update Mystery Box
+            let gachaBtn = document.querySelector('.gacha-btn');
+            gachaBtn.disabled = catTreats < 3;
+            gachaBtn.innerText = catTreats >= 3 ? `Buy (3 Treats)` : `Too Poor (3 Treats)`;
+
+            // Update Cosmetics
+            document.querySelectorAll('.cosmetic-btn').forEach(btn => {
+                let item = btn.dataset.item;
+                let data = shopState[item];
+                btn.classList.remove('equipped');
+                if (data.owned) {
+                    btn.disabled = false;
+                    if (activeCosmetic === item) { btn.innerText = 'Equipped'; btn.classList.add('equipped'); } 
+                    else { btn.innerText = 'Equip'; }
+                } else {
+                    btn.disabled = catTreats < data.cost;
+                    btn.innerText = catTreats >= data.cost ? `Buy (${data.cost} Treats)` : `Too Poor (${data.cost})`;
+                }
+            });
+        }
+
+        // --- GACHA ANIMATION & REWARDS ---
+        function startMysteryBox() {
+            isBoxOpening = true;
+            editor.disabled = true; 
+            if (isSabotaging) stopSabotage();
+            clearInterval(updateTimer); 
+
+            animationOverlay.classList.add('active');
+
+            setTimeout(() => {
+                animationOverlay.classList.remove('active');
+                rollMysteryLoot();
+            }, 2500);
+        }
+
+        function rollMysteryLoot() {
+            let roll = Math.random() * 100;
+            let title = "", desc = "", action = () => {};
+
+            if (roll < 10) { 
+                title = "✨ The Deep Sleep";
+                desc = "The cat passed out. You bought 60 seconds of glorious, uninterrupted peace.";
+                action = () => { triggerPeace(60); editor.classList.add('golden-halo'); setTimeout(() => editor.classList.remove('golden-halo'), 60000); };
+            } else if (roll < 20) { 
+                title = "💰 The Treat Stash";
+                desc = "The cat ripped open the bag. You found 10 Cat Treats!";
+                action = () => { catTreats += 10; triggerCosmetic('confetti'); };
+            } else if (roll < 55) { 
+                title = "📦 The Empty Box";
+                desc = "The cat prefers the box the toy came in. The treats are gone. Nothing happens.";
+            } else if (roll < 70) { 
+                title = "🪲 A Dead Bug";
+                desc = "The cat brought you a 'gift'. No peace for you.";
+                action = () => triggerCosmetic('bug');
+            } else if (roll < 90) { 
+                title = "👿 Mega Zoomies";
+                desc = "You gave the cat premium catnip. The idle timer is reduced to 1.0s for the next 45 seconds. SURVIVE.";
+                action = () => triggerMegaZoomies();
+            } else { 
+                title = "🤮 The Hairball";
+                desc = "Instead of attacking later, the cat vomits on your keyboard RIGHT NOW.";
+                action = () => {
+                    let start = editor.selectionStart, end = editor.selectionEnd, text = editor.value;
+                    let vomit = "\n[HACK COUGH ACK BLARRRGH 🐈💦]\n";
+                    editor.value = text.substring(0, start) + vomit + text.substring(end);
+                    editor.selectionStart = editor.selectionEnd = start + vomit.length;
+                    editor.scrollTop = editor.scrollHeight;
+                };
+            }
+
+            document.getElementById('result-title').innerText = title;
+            document.getElementById('result-desc').innerText = desc;
+            resultModal.classList.add('active');
+
+            document.getElementById('btn-close-result').onclick = () => {
+                resultModal.classList.remove('active');
+                action();
+                resumeGame();
+            };
+        }
+
+        function triggerMegaZoomies() {
+            isMegaZoomies = true;
+            editor.classList.add('mega-zoomies');
+            setTimeout(() => {
+                isMegaZoomies = false;
+                editor.classList.remove('mega-zoomies');
+            }, 45000);
+        }
+
+        function resumeGame() {
+            isBoxOpening = false;
+            editor.disabled = false;
+            editor.focus();
+            lastInputTime = Date.now(); 
+            updateTimer = setInterval(tick, 100);
+            updateUI();
+        }
+
+        // --- COSMETICS RENDERER ---
+        function triggerCosmetic(item) {
+            if (item === 'confetti') {
+                const emojis = ['🎉', '✨', '🐾', '🎊'];
+                for(let i=0; i<30; i++) {
+                    let conf = document.createElement('div');
+                    conf.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    conf.style.position = 'fixed'; conf.style.left = Math.random() * 100 + 'vw'; conf.style.top = '-10vh'; 
+                    conf.style.fontSize = (Math.random() * 20 + 20) + 'px'; conf.style.zIndex = '9999'; conf.style.pointerEvents = 'none';
+                    conf.style.transition = 'top 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 2.5s linear';
+                    document.body.appendChild(conf);
+                    setTimeout(() => { conf.style.top = '110vh'; conf.style.transform = `rotate(${Math.random() * 720}deg) translateX(${Math.random() * 100 - 50}px)`; }, 50);
+                    setTimeout(() => conf.remove(), 3000);
+                }
+            } else if (item === 'rain') {
+                for(let i=0; i<40; i++) {
+                    setTimeout(() => {
+                        let fish = document.createElement('div'); fish.innerText = '🐟';
+                        fish.style.position = 'fixed'; fish.style.left = Math.random() * 100 + 'vw'; fish.style.top = '-10vh';
+                        fish.style.fontSize = '30px'; fish.style.zIndex = '9999'; fish.style.pointerEvents = 'none';
+                        let duration = Math.random() * 2 + 2; fish.style.transition = `top ${duration}s linear, transform ${duration}s linear`;
+                        document.body.appendChild(fish);
+                        setTimeout(() => { fish.style.top = '110vh'; fish.style.transform = `rotate(${Math.random() * 360 - 180}deg)`; }, 50);
+                        setTimeout(() => fish.remove(), duration * 1000 + 100);
+                    }, i * 50); 
+                }
+            } else if (item === 'kittens') {
+                for(let i=0; i<12; i++) {
+                    setTimeout(() => {
+                        let cat = document.createElement('div'); cat.innerText = ['🐈', '🐅', '🐆'][Math.floor(Math.random()*3)];
+                        cat.style.position = 'fixed'; cat.style.left = '-150px'; cat.style.top = Math.random() * 80 + 10 + 'vh';
+                        cat.style.fontSize = (Math.random() * 30 + 40) + 'px'; cat.style.zIndex = '9998'; cat.style.pointerEvents = 'none';
+                        let duration = Math.random() * 3 + 2; cat.style.transition = `left ${duration}s linear`;
+                        document.body.appendChild(cat);
+                        setTimeout(() => { cat.style.left = '110vw'; }, 50);
+                        setTimeout(() => cat.remove(), duration * 1000 + 100);
+                    }, i * 200); 
+                }
+            } else if (item === 'bug') {
+                let bug = document.createElement('div'); bug.innerText = '🪲';
+                bug.style.position = 'fixed'; bug.style.left = '50vw'; bug.style.top = '-20vh';
+                bug.style.fontSize = '120px'; bug.style.zIndex = '9999'; bug.style.pointerEvents = 'none';
+                bug.style.transition = `top 3s ease-in, transform 3s linear`;
+                document.body.appendChild(bug);
+                setTimeout(() => { bug.style.top = '120vh'; bug.style.transform = `rotate(180deg)`; }, 50);
+                setTimeout(() => bug.remove(), 3500);
+            }
+        }
+
+        // --- Core Game Logic ---
+        function setCatState(state) {
+            catCamContainer.classList.remove('sabotage', 'peace');
+            if (state === 'watching') { if (catGif.src !== GIF_WATCHING) catGif.src = GIF_WATCHING; } 
+            else if (state === 'typing') { catCamContainer.classList.add('sabotage'); if (catGif.src !== GIF_TYPING) catGif.src = GIF_TYPING; } 
+            else if (state === 'eating') { catCamContainer.classList.add('peace'); if (catGif.src !== GIF_EATING) catGif.src = GIF_EATING; }
+        }
+
+        function updateUI() {
+            treatCountEl.innerText = catTreats;
+            btnFeed.disabled = catTreats === 0 || isPeaceTime;
+            
+            if (isPeaceTime) {
+                document.getElementById('idle-display').style.display = 'none';
+                document.getElementById('peace-display').style.display = 'flex';
+                peaceTimeEl.innerText = `${peaceSeconds}s`;
+                editor.classList.remove('is-sabotaged');
+            } else {
+                document.getElementById('peace-display').style.display = 'none';
+                document.getElementById('idle-display').style.display = 'flex';
+                idleTimeEl.innerText = `${(idleTimeLeft / 1000).toFixed(1)}s`;
+                if (idleTimeLeft <= 0) {
+                    idleTimeEl.innerText = "ATTACKING!";
+                    editor.classList.add('is-sabotaged');
+                } else {
+                    editor.classList.remove('is-sabotaged');
+                }
+            }
+            streakProgress.style.width = `${Math.min((streak / charsPerTreat) * 100, 100)}%`;
+        }
+
+        function insertCatWalk() {
+            const str = catStrings[Math.floor(Math.random() * catStrings.length)];
+            const start = editor.selectionStart, end = editor.selectionEnd, text = editor.value;
+            editor.value = text.substring(0, start) + str + text.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + str.length;
+            editor.scrollTop = editor.scrollHeight;
+        }
+
+        function startSabotage() {
+            if (isSabotaging) return;
+            isSabotaging = true; streak = 0; 
+            setCatState('typing'); insertCatWalk();
+            sabotageInterval = setInterval(insertCatWalk, SABOTAGE_RATE_MS);
+            updateUI();
+        }
+
+        function stopSabotage() {
+            isSabotaging = false; clearInterval(sabotageInterval);
+            if (!isPeaceTime) setCatState('watching');
+        }
+
+        function tick() {
+            if (!hasStarted || isPeaceTime || isBoxOpening) return;
+            const now = Date.now();
+            const elapsedSinceInput = now - lastInputTime;
+            
+            // Mega zoomies overrides user settings
+            let activeLimitMs = isMegaZoomies ? 1000 : baseIdleLimitMs; 
+            idleTimeLeft = Math.max(0, activeLimitMs - elapsedSinceInput);
+            
+            if (idleTimeLeft === 0 && !isSabotaging) startSabotage();
+            updateUI();
+        }
+
+        function handleInput() {
+            if (isBoxOpening) return;
+            if (!hasStarted) { hasStarted = true; updateTimer = setInterval(tick, 100); }
+            lastInputTime = Date.now();
+            idleTimeLeft = isMegaZoomies ? 1000 : baseIdleLimitMs;
+            
+            if (isSabotaging) stopSabotage();
+
+            if (!isPeaceTime) {
+                streak++;
+                if (streak >= charsPerTreat) { 
+                    catTreats++; streak = 0; 
+                    if (activeCosmetic) triggerCosmetic(activeCosmetic);
+                }
+                updateUI();
+            }
+        }
+
+        editor.addEventListener('focus', () => {
+            if (!hasStarted && !isBoxOpening) { lastInputTime = Date.now(); hasStarted = true; updateTimer = setInterval(tick, 100); }
+        });
+
+        editor.addEventListener('input', handleInput);
+
+        function triggerPeace(durationSeconds) {
+            isPeaceTime = true; stopSabotage(); setCatState('eating');
+            peaceSeconds = durationSeconds; streak = 0; updateUI();
+            clearInterval(peaceTimerInterval); 
+            peaceTimerInterval = setInterval(() => {
+                peaceSeconds--; updateUI();
+                if (peaceSeconds <= 0) {
+                    clearInterval(peaceTimerInterval); isPeaceTime = false;
+                    lastInputTime = Date.now(); setCatState('watching'); updateUI();
+                }
+            }, 1000);
+        }
+
+        btnFeed.addEventListener('click', () => {
+            if (catTreats > 0 && !isPeaceTime) {
+                catTreats--;
+                triggerPeace(PEACE_DURATION_SEC);
+            }
+        });
+
+        document.getElementById('btn-copy').addEventListener('click', (e) => {
+            editor.select(); document.execCommand('copy');
+            const originalText = e.target.innerText; e.target.innerText = 'Copied!';
+            setTimeout(() => e.target.innerText = originalText, 2000);
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            if(confirm('Clear all text? This cannot be undone.')) {
+                editor.value = ''; streak = 0; lastInputTime = Date.now(); 
+                if (isSabotaging) stopSabotage();
+                updateUI(); editor.focus();
+            }
+        });
+
+        // Initialize
+        setCatState('watching'); updateUI(); updateShopUI();
+        window.addEventListener('DOMContentLoaded', () => instructionsModal.classList.add('active'));
+
+    </script>
+</body>
+</html>
