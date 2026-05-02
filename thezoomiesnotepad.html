@@ -127,7 +127,7 @@
             padding: 1.5rem; border-radius: 8px; font-family: 'Fira Code', 'Courier New', Courier, monospace;
             font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
         }
-        .prompt-banner.active + textarea { border-top-left-radius: 0; border-top-right-radius: 0; } /* Seamless connection */
+        .prompt-banner.active + textarea { border-top-left-radius: 0; border-top-right-radius: 0; } 
         textarea:focus { border-color: var(--primary); }
         textarea:disabled { opacity: 0.7; cursor: not-allowed; }
         textarea.is-sabotaged { border-color: var(--danger); }
@@ -680,7 +680,7 @@
             updateUI();
         }
 
-        function handleInput() {
+        function handleInput(e) {
             if (isBoxOpening) return;
             if (!hasStarted) { hasStarted = true; updateTimer = setInterval(tick, 100); }
             lastInputTime = Date.now();
@@ -689,10 +689,15 @@
             if (isSabotaging) stopSabotage();
 
             if (!isPeaceTime) {
-                streak++;
-                if (streak >= charsPerTreat) { 
-                    catTreats++; streak = 0; 
-                    if (activeCosmetic) triggerCosmetic(activeCosmetic);
+                // Prevent deletions from counting towards the treat streak
+                const isDeletion = e && e.inputType && e.inputType.toLowerCase().includes('delete');
+                
+                if (!isDeletion) {
+                    streak++;
+                    if (streak >= charsPerTreat) { 
+                        catTreats++; streak = 0; 
+                        if (activeCosmetic) triggerCosmetic(activeCosmetic);
+                    }
                 }
                 updateUI();
             }
