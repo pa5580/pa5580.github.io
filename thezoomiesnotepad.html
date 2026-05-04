@@ -76,7 +76,7 @@
         }
         .cat-cam.sabotage { border-color: var(--danger); }
         .cat-cam.peace { border-color: var(--success); }
-        .cat-cam.error { border-color: #0ff; box-shadow: 0 0 20px #0ff; } /* Used for water spill spark */
+        .cat-cam.error { border-color: #0ff; box-shadow: 0 0 20px #0ff; } 
         .cat-cam img { width: 100%; height: 100%; object-fit: cover; }
 
         .dashboard {
@@ -108,7 +108,7 @@
         .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .btn-outline:hover { background-color: var(--surface); }
 
-        .editor-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; z-index: 5; }
+        .editor-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; z-index: 5; overflow: hidden; border-radius: 8px;}
 
         /* Writing Prompt Banner */
         .prompt-banner {
@@ -128,7 +128,7 @@
         .btn-close-prompt { position: absolute; top: 0.5rem; right: 0.5rem; background: none; color: var(--text-muted); padding: 0; font-size: 1.2rem; border: none; }
         .btn-close-prompt:hover { color: var(--danger); background: none; }
 
-        /* "Pay Attention to Me" Overlay - NOW MOVING & MASSIVE */
+        /* "Pay Attention to Me" Overlay */
         .pay-attention-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; overflow: hidden; z-index: 8;
@@ -143,11 +143,17 @@
             transform-origin: center;
         }
 
+        /* SHEDDING HAIRS */
+        .cat-hair {
+            position: absolute; pointer-events: none; z-index: 6;
+            opacity: 0.6; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+        }
+
         textarea {
             flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border);
-            padding: 1.5rem; border-radius: 8px; font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            padding: 1.5rem; border-radius: inherit; font-family: 'Fira Code', 'Courier New', Courier, monospace;
             font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; 
-            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s, transform 0.6s ease;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s, transform 0.6s ease, filter 0.3s ease;
         }
         .prompt-banner.active + textarea { border-top-left-radius: 0; border-top-right-radius: 0; } 
         textarea:focus { border-color: var(--primary); }
@@ -156,7 +162,9 @@
         
         /* GACHA REWARD CSS EFFECTS */
         textarea.golden-halo { box-shadow: 0 0 30px 5px gold !important; border-color: gold !important; }
+        textarea.catnip-glow { box-shadow: 0 0 30px 10px #4ade80 !important; border-color: #4ade80 !important; }
         textarea.mega-zoomies { border-color: #a855f7 !important; box-shadow: 0 0 20px #a855f7; animation: pulseZoomies 1s infinite; }
+        textarea.farsighted { filter: blur(4px) !important; }
         textarea.font-crime { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif !important; letter-spacing: -0.5px; }
         textarea.gravity-inverted { transform: rotate(180deg) !important; }
         
@@ -399,6 +407,8 @@
         let isMegaZoomies = false; 
         let isWaterSpilled = false;
         let isStickyPaws = false;
+        let isMeowifier = false;
+        let isCatnipOverdose = false;
         let pawMoveInterval = null;
         
         let peaceSeconds = 0;
@@ -416,7 +426,7 @@
         const catStrings = [
             "aassddffffffff", "meow meow meow ", "[CAPSLOCK ON]", "1111111222222", 
             "🐈🐾🐾🐾", " FEED ME TUNA ", "jsdfkljsdf", " purrrrrrrrr ",
-            "(=^･ω･^=) ", "(^・x・^) ", "(=｀ω´=) ", "ฅ(＾・ω・＾ฅ) ",
+            "(=^･ω^=) ", "(^・x・^) ", "(=｀ω´=) ", "ฅ(＾・ω・＾ฅ) ",
             "///w/// ", "zxcvbnm,./", "   ", "\n\n", "paws paws paws",
             "!!!ATTENTION!!!", "( ⓛ ω ⓛ *) "
         ];
@@ -457,13 +467,27 @@
 
         document.getElementById('theme-select').addEventListener('change', (e) => document.body.className = `theme-${e.target.value}`);
 
-        // Hardcore Mode & Water Spill Logic
+        // Input Overrides (Hardcore, Water Spill, Meowifier)
         editor.addEventListener('keydown', (e) => {
             const hardcore = document.getElementById('hardcore-toggle').checked;
+            
+            // Block backspace if hardcore or water spilled
             if ((hardcore || isWaterSpilled) && (e.key === 'Backspace' || e.key === 'Delete')) {
                 e.preventDefault(); 
                 catCamContainer.classList.add('error');
                 setTimeout(() => catCamContainer.classList.remove('error'), 200);
+            }
+
+            // The Meowifier logic
+            if (isMeowifier && e.code === 'Space') {
+                e.preventDefault();
+                const start = editor.selectionStart;
+                const text = editor.value;
+                editor.value = text.substring(0, start) + 'meow ' + text.substring(editor.selectionEnd);
+                editor.selectionStart = editor.selectionEnd = start + 5;
+                
+                // Manually trigger handle input to process the treat streak correctly
+                handleInput({ data: 'm' }); 
             }
         });
 
@@ -551,30 +575,30 @@
             let roll = Math.random() * 100;
             let title = "", desc = "", action = () => {};
 
-            // 11 possible outcomes, balanced for maximum chaos
-            if (roll < 9) { 
+            // 16 POSSIBLE OUTCOMES
+            if (roll < 6) { 
                 title = "✨ The Deep Sleep";
                 desc = "The cat passed out. You bought 60 seconds of glorious, uninterrupted peace.";
                 action = () => { triggerPeace(60, 'sleeping'); editor.classList.add('golden-halo'); setTimeout(() => editor.classList.remove('golden-halo'), 60000); };
-            } else if (roll < 18) { 
+            } else if (roll < 12) { 
                 title = "💰 The Treat Stash";
                 desc = "The cat ripped open the bag. You found 10 Cat Treats!";
                 action = () => { catTreats += 10; triggerCosmetic('confetti'); };
-            } else if (roll < 27) { 
+            } else if (roll < 18) { 
                 title = "📦 The Empty Box";
                 desc = "The cat prefers the box the toy came in. The treats are gone. Nothing happens.";
-            } else if (roll < 36) { 
+            } else if (roll < 24) { 
                 title = "🪲 A Dead Bug";
                 desc = "The cat brought you a 'gift'. No peace for you.";
                 action = () => triggerCosmetic('bug');
-            } else if (roll < 45) { 
+            } else if (roll < 30) { 
                 title = "👿 Mega Zoomies";
                 desc = "Premium catnip. The idle timer is reduced to 1.0s for the next 45 seconds. SURVIVE.";
                 action = () => {
                     isMegaZoomies = true; editor.classList.add('mega-zoomies');
                     setTimeout(() => { isMegaZoomies = false; editor.classList.remove('mega-zoomies'); }, 45000);
                 };
-            } else if (roll < 54) { 
+            } else if (roll < 36) { 
                 title = "🤮 The Hairball";
                 desc = "Instead of attacking later, the cat vomits on your keyboard RIGHT NOW.";
                 action = () => {
@@ -584,7 +608,7 @@
                     editor.selectionStart = editor.selectionEnd = start + vomit.length;
                     editor.scrollTop = editor.scrollHeight;
                 };
-            } else if (roll < 65) { 
+            } else if (roll < 42) { 
                 title = "🐾 Pay Attention to Me!";
                 desc = "The cat is actively jumping on your screen. Good luck seeing your text for the next 15 seconds.";
                 action = () => {
@@ -592,55 +616,67 @@
                     let paw = document.getElementById('moving-paw');
                     overlay.classList.add('active');
 
-                    // Center it initially
-                    paw.style.top = "50%";
-                    paw.style.left = "50%";
-                    paw.style.transform = "translate(-50%, -50%) rotate(0deg)";
+                    paw.style.top = "50%"; paw.style.left = "50%"; paw.style.transform = "translate(-50%, -50%) rotate(0deg)";
 
                     pawMoveInterval = setInterval(() => {
-                        // Random percentage positions. Allowing slightly off-screen chaos (-10% to 70%)
                         let randomTop = Math.random() * 80 - 10; 
                         let randomLeft = Math.random() * 80 - 10;
-                        let randomRot = Math.random() * 60 - 30; // Random tilt -30 to 30 deg
-                        
-                        paw.style.top = `${randomTop}%`;
-                        paw.style.left = `${randomLeft}%`;
+                        let randomRot = Math.random() * 60 - 30; 
+                        paw.style.top = `${randomTop}%`; paw.style.left = `${randomLeft}%`;
                         paw.style.transform = `translate(0, 0) rotate(${randomRot}deg)`;
                     }, 500);
 
-                    setTimeout(() => {
-                        overlay.classList.remove('active');
-                        clearInterval(pawMoveInterval);
-                    }, 15000);
+                    setTimeout(() => { overlay.classList.remove('active'); clearInterval(pawMoveInterval); }, 15000);
                 };
-            } else if (roll < 76) { 
+            } else if (roll < 48) { 
                 title = "💦 Spilled Water Glass";
                 desc = "Your keyboard is wet! The Backspace and Delete keys are short-circuiting for 45 seconds!";
-                action = () => {
-                    isWaterSpilled = true;
-                    setTimeout(() => isWaterSpilled = false, 45000);
-                };
-            } else if (roll < 85) { 
+                action = () => { isWaterSpilled = true; setTimeout(() => isWaterSpilled = false, 45000); };
+            } else if (roll < 54) { 
                 title = "🐈 Sticky Paws";
                 desc = "The cat walked all over the keys. Characters will randomly double-type for 20 seconds.";
-                action = () => {
-                    isStickyPaws = true;
-                    setTimeout(() => isStickyPaws = false, 20000);
-                };
-            } else if (roll < 93) { 
+                action = () => { isStickyPaws = true; setTimeout(() => isStickyPaws = false, 20000); };
+            } else if (roll < 60) { 
                 title = "😼 Font Crimes";
                 desc = "The cat messed with your system settings. Enjoy Comic Sans for 60 seconds.";
-                action = () => {
-                    editor.classList.add('font-crime');
-                    setTimeout(() => editor.classList.remove('font-crime'), 60000);
-                };
-            } else { 
+                action = () => { editor.classList.add('font-crime'); setTimeout(() => editor.classList.remove('font-crime'), 60000); };
+            } else if (roll < 66) { 
                 title = "😾 Gravity Inversion";
                 desc = "The cat knocked your monitor over. The editor is upside down for 30 seconds. Good luck.";
+                action = () => { editor.classList.add('gravity-inverted'); setTimeout(() => editor.classList.remove('gravity-inverted'), 30000); };
+            } else if (roll < 72) {
+                title = "🗣️ The Meowifier";
+                desc = "The spacebar is broken! Every time you press space, you will type 'meow ' instead for 30 seconds.";
+                action = () => { isMeowifier = true; setTimeout(() => isMeowifier = false, 30000); };
+            } else if (roll < 78) {
+                title = "🧥 Shedding Season";
+                desc = "The cat sheds all over your screen. The hairs will stay there forever unless a Roomba cleans them.";
                 action = () => {
-                    editor.classList.add('gravity-inverted');
-                    setTimeout(() => editor.classList.remove('gravity-inverted'), 30000);
+                    for(let i=0; i<15; i++) {
+                        let hair = document.createElement('div');
+                        hair.classList.add('cat-hair');
+                        hair.innerHTML = `<svg width="50" height="50" viewBox="0 0 50 50"><path d="M10,40 Q20,10 40,20" stroke="var(--text-main)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+                        hair.style.left = Math.random() * 90 + '%';
+                        hair.style.top = Math.random() * 90 + '%';
+                        hair.style.transform = `rotate(${Math.random() * 360}deg)`;
+                        document.querySelector('.editor-container').appendChild(hair);
+                    }
                 };
+            } else if (roll < 84) {
+                title = "🌫️ Farsighted Feline";
+                desc = "The cat sneezed on your screen. Your vision is blurry for 20 seconds.";
+                action = () => { editor.classList.add('farsighted'); setTimeout(() => editor.classList.remove('farsighted'), 20000); };
+            } else if (roll < 90) {
+                title = "🌿 Catnip Overdose (BUFF)";
+                desc = "The cat is too high to process your typing speed. For 15 seconds, EVERY SINGLE CHARACTER EARNS A TREAT! TYPE FAST!";
+                action = () => {
+                    isCatnipOverdose = true; editor.classList.add('catnip-glow');
+                    setTimeout(() => { isCatnipOverdose = false; editor.classList.remove('catnip-glow'); }, 15000);
+                };
+            } else {
+                title = "🧹 The Roomba (BUFF)";
+                desc = "A robot vacuum drives across your screen! It cleans up ALL active debuffs, blur, screen hazards, and stray hairs!";
+                action = () => { triggerRoomba(); };
             }
 
             document.getElementById('result-title').innerText = title;
@@ -652,6 +688,32 @@
                 action();
                 resumeGame();
             };
+        }
+
+        function triggerRoomba() {
+            let roomba = document.createElement('div');
+            roomba.innerText = '🤖'; 
+            roomba.style.position = 'fixed'; roomba.style.bottom = '15%'; roomba.style.left = '-150px';
+            roomba.style.fontSize = '100px'; roomba.style.zIndex = '9999'; roomba.style.transition = 'left 5s linear';
+            document.body.appendChild(roomba);
+
+            setTimeout(() => { roomba.style.left = '110vw'; }, 50);
+
+            // Clean debuffs right as the Roomba reaches the center
+            setTimeout(() => {
+                isMeowifier = false;
+                isWaterSpilled = false;
+                isStickyPaws = false;
+                isMegaZoomies = false;
+                editor.classList.remove('mega-zoomies', 'farsighted', 'font-crime', 'gravity-inverted');
+                document.querySelectorAll('.cat-hair').forEach(h => h.remove());
+                
+                let overlay = document.getElementById('pay-attention-overlay');
+                overlay.classList.remove('active');
+                if (pawMoveInterval) clearInterval(pawMoveInterval);
+            }, 2500);
+
+            setTimeout(() => roomba.remove(), 5500);
         }
 
         function resumeGame() {
@@ -741,7 +803,9 @@
                     editor.classList.remove('is-sabotaged');
                 }
             }
-            streakProgress.style.width = `${Math.min((streak / charsPerTreat) * 100, 100)}%`;
+            // Use active threshold based on Catnip buff
+            let activeCharsReq = isCatnipOverdose ? 1 : charsPerTreat;
+            streakProgress.style.width = `${Math.min((streak / activeCharsReq) * 100, 100)}%`;
         }
 
         function insertCatWalk() {
@@ -797,12 +861,13 @@
             }
 
             if (!isPeaceTime) {
-                // Prevent deletions from counting towards the treat streak
                 const isDeletion = e && e.inputType && e.inputType.toLowerCase().includes('delete');
                 
                 if (!isDeletion) {
                     streak++;
-                    if (streak >= charsPerTreat) { 
+                    let activeCharsReq = isCatnipOverdose ? 1 : charsPerTreat;
+
+                    if (streak >= activeCharsReq) { 
                         catTreats++; streak = 0; 
                         if (activeCosmetic) triggerCosmetic(activeCosmetic);
                     }
