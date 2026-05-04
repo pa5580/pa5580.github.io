@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Zoomies Notepad - Maximum Chaos Edition</title>
+    <title>The Zoomies Notepad - Absolute Chaos Edition</title>
     <style>
         /* --- THE PAW CURSOR SPREADS EVERYWHERE --- */
         * {
@@ -66,11 +66,11 @@
 
         .cat-cam {
             width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--border);
-            overflow: hidden; background-color: black; transition: border-color 0.3s; flex-shrink: 0;
+            overflow: hidden; background-color: black; transition: border-color 0.3s, box-shadow 0.3s; flex-shrink: 0;
         }
         .cat-cam.sabotage { border-color: var(--danger); }
         .cat-cam.peace { border-color: var(--success); }
-        .cat-cam.error { border-color: red; box-shadow: 0 0 15px red; }
+        .cat-cam.error { border-color: #0ff; box-shadow: 0 0 20px #0ff; } /* Used for water spill spark */
         .cat-cam img { width: 100%; height: 100%; object-fit: cover; }
 
         .dashboard {
@@ -122,10 +122,21 @@
         .btn-close-prompt { position: absolute; top: 0.5rem; right: 0.5rem; background: none; color: var(--text-muted); padding: 0; font-size: 1.2rem; border: none; }
         .btn-close-prompt:hover { color: var(--danger); background: none; }
 
+        /* "Pay Attention to Me" Overlay */
+        .pay-attention-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 250px; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease; z-index: 8;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .pay-attention-overlay.active { opacity: 0.9; }
+
         textarea {
             flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border);
             padding: 1.5rem; border-radius: 8px; font-family: 'Fira Code', 'Courier New', Courier, monospace;
-            font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s;
+            font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; 
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s, transform 0.6s ease;
         }
         .prompt-banner.active + textarea { border-top-left-radius: 0; border-top-right-radius: 0; } 
         textarea:focus { border-color: var(--primary); }
@@ -135,6 +146,9 @@
         /* GACHA REWARD CSS EFFECTS */
         textarea.golden-halo { box-shadow: 0 0 30px 5px gold !important; border-color: gold !important; }
         textarea.mega-zoomies { border-color: #a855f7 !important; box-shadow: 0 0 20px #a855f7; animation: pulseZoomies 1s infinite; }
+        textarea.font-crime { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif !important; letter-spacing: -0.5px; }
+        textarea.gravity-inverted { transform: rotate(180deg) !important; }
+        
         @keyframes pulseZoomies { 0% { box-shadow: 0 0 10px #a855f7; } 50% { box-shadow: 0 0 30px #a855f7; } 100% { box-shadow: 0 0 10px #a855f7; } }
 
         .footer-controls { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; z-index: 10; }
@@ -237,6 +251,7 @@
             <button class="btn-close-prompt" id="btn-close-prompt">&times;</button>
         </div>
         <textarea id="editor" placeholder="Start typing... Don't stop. The cat is watching." spellcheck="false"></textarea>
+        <div id="pay-attention-overlay" class="pay-attention-overlay">🐈</div>
         <div class="progress-bar"><div class="progress-fill" id="streak-progress"></div></div>
     </div>
 
@@ -258,7 +273,7 @@
             <div class="why-use-box">
                 <h4>🧠 Why subject yourself to this?</h4>
                 <ul>
-                    <li><strong>Cure Writer's Block:</strong> Panic is the ultimate muse. You can't overthink your prose when you are fighting for your life.</li>
+                    <li><strong>Cure Writer's Block:</strong> Panic is the ultimate muse. You can't overthink your prose when fighting for your life.</li>
                     <li><strong>Practice Speed:</strong> Learn to type faster than your own anxiety.</li>
                     <li><strong>Build Confidence:</strong> If you can write an essay under these hostile conditions, you can write anywhere.</li>
                 </ul>
@@ -287,7 +302,7 @@
                 <div class="shop-item gacha-item">
                     <div class="shop-info">
                         <strong>📦 Suspicious Cardboard Box</strong>
-                        <span>Pure gambling. Could be 60 seconds of peace. Could be instant sabotage.</span>
+                        <span>Pure gambling. Could be peace. Could invert gravity. Could be a hairball. May god have mercy on your soul.</span>
                     </div>
                     <button class="btn-shop buy-btn gacha-btn" data-type="consumable" data-cost="3">Buy (3 Treats)</button>
                 </div>
@@ -362,7 +377,11 @@
         let isPeaceTime = false;
         let isSabotaging = false;
         let isBoxOpening = false;
+        
+        // Gacha Horror Variables
         let isMegaZoomies = false; 
+        let isWaterSpilled = false;
+        let isStickyPaws = false;
         
         let peaceSeconds = 0;
         let idleTimeLeft = baseIdleLimitMs;
@@ -413,9 +432,10 @@
 
         document.getElementById('theme-select').addEventListener('change', (e) => document.body.className = `theme-${e.target.value}`);
 
-        // Hardcore Mode Check
+        // Hardcore Mode & Water Spill Logic
         editor.addEventListener('keydown', (e) => {
-            if (document.getElementById('hardcore-toggle').checked && (e.key === 'Backspace' || e.key === 'Delete')) {
+            const hardcore = document.getElementById('hardcore-toggle').checked;
+            if ((hardcore || isWaterSpilled) && (e.key === 'Backspace' || e.key === 'Delete')) {
                 e.preventDefault(); 
                 catCamContainer.classList.add('error');
                 setTimeout(() => catCamContainer.classList.remove('error'), 200);
@@ -506,26 +526,30 @@
             let roll = Math.random() * 100;
             let title = "", desc = "", action = () => {};
 
-            if (roll < 10) { 
+            // 11 possible outcomes, balanced for maximum chaos
+            if (roll < 9) { 
                 title = "✨ The Deep Sleep";
                 desc = "The cat passed out. You bought 60 seconds of glorious, uninterrupted peace.";
                 action = () => { triggerPeace(60); editor.classList.add('golden-halo'); setTimeout(() => editor.classList.remove('golden-halo'), 60000); };
-            } else if (roll < 20) { 
+            } else if (roll < 18) { 
                 title = "💰 The Treat Stash";
                 desc = "The cat ripped open the bag. You found 10 Cat Treats!";
                 action = () => { catTreats += 10; triggerCosmetic('confetti'); };
-            } else if (roll < 55) { 
+            } else if (roll < 27) { 
                 title = "📦 The Empty Box";
                 desc = "The cat prefers the box the toy came in. The treats are gone. Nothing happens.";
-            } else if (roll < 70) { 
+            } else if (roll < 36) { 
                 title = "🪲 A Dead Bug";
                 desc = "The cat brought you a 'gift'. No peace for you.";
                 action = () => triggerCosmetic('bug');
-            } else if (roll < 90) { 
+            } else if (roll < 45) { 
                 title = "👿 Mega Zoomies";
-                desc = "You gave the cat premium catnip. The idle timer is reduced to 1.0s for the next 45 seconds. SURVIVE.";
-                action = () => triggerMegaZoomies();
-            } else { 
+                desc = "Premium catnip. The idle timer is reduced to 1.0s for the next 45 seconds. SURVIVE.";
+                action = () => {
+                    isMegaZoomies = true; editor.classList.add('mega-zoomies');
+                    setTimeout(() => { isMegaZoomies = false; editor.classList.remove('mega-zoomies'); }, 45000);
+                };
+            } else if (roll < 54) { 
                 title = "🤮 The Hairball";
                 desc = "Instead of attacking later, the cat vomits on your keyboard RIGHT NOW.";
                 action = () => {
@@ -534,6 +558,42 @@
                     editor.value = text.substring(0, start) + vomit + text.substring(end);
                     editor.selectionStart = editor.selectionEnd = start + vomit.length;
                     editor.scrollTop = editor.scrollHeight;
+                };
+            } else if (roll < 65) { 
+                title = "🐾 Pay Attention to Me!";
+                desc = "The cat sits directly on your screen. You can type, but you won't be able to see for 15 seconds.";
+                action = () => {
+                    let overlay = document.getElementById('pay-attention-overlay');
+                    overlay.classList.add('active');
+                    setTimeout(() => overlay.classList.remove('active'), 15000);
+                };
+            } else if (roll < 76) { 
+                title = "💦 Spilled Water Glass";
+                desc = "Your keyboard is wet! The Backspace and Delete keys are short-circuiting for 45 seconds!";
+                action = () => {
+                    isWaterSpilled = true;
+                    setTimeout(() => isWaterSpilled = false, 45000);
+                };
+            } else if (roll < 85) { 
+                title = "🐈 Sticky Paws";
+                desc = "The cat walked all over the keys. Characters will randomly double-type for 20 seconds.";
+                action = () => {
+                    isStickyPaws = true;
+                    setTimeout(() => isStickyPaws = false, 20000);
+                };
+            } else if (roll < 93) { 
+                title = "😼 Font Crimes";
+                desc = "The cat messed with your system settings. Enjoy Comic Sans for 60 seconds.";
+                action = () => {
+                    editor.classList.add('font-crime');
+                    setTimeout(() => editor.classList.remove('font-crime'), 60000);
+                };
+            } else { 
+                title = "😾 Gravity Inversion";
+                desc = "The cat knocked your monitor over. The editor is upside down for 30 seconds. Good luck.";
+                action = () => {
+                    editor.classList.add('gravity-inverted');
+                    setTimeout(() => editor.classList.remove('gravity-inverted'), 30000);
                 };
             }
 
@@ -546,15 +606,6 @@
                 action();
                 resumeGame();
             };
-        }
-
-        function triggerMegaZoomies() {
-            isMegaZoomies = true;
-            editor.classList.add('mega-zoomies');
-            setTimeout(() => {
-                isMegaZoomies = false;
-                editor.classList.remove('mega-zoomies');
-            }, 45000);
         }
 
         function resumeGame() {
@@ -687,6 +738,16 @@
             idleTimeLeft = isMegaZoomies ? 1000 : baseIdleLimitMs;
             
             if (isSabotaging) stopSabotage();
+
+            // Sticky Paws Check (15% chance to double type a character)
+            if (isStickyPaws && e.data) {
+                if (Math.random() < 0.15) {
+                    const start = editor.selectionStart;
+                    const text = editor.value;
+                    editor.value = text.substring(0, start) + e.data + text.substring(start);
+                    editor.selectionStart = editor.selectionEnd = start + e.data.length;
+                }
+            }
 
             if (!isPeaceTime) {
                 // Prevent deletions from counting towards the treat streak
