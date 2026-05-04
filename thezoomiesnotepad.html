@@ -34,6 +34,12 @@
         body.theme-hacker { --bg-color: #000000; --surface: #0a0a0a; --border: #00ff00; --text-main: #00ff00; --text-muted: #005500; }
         /* Salmon Theme Overrides */
         body.theme-salmon { --bg-color: #fff0f5; --surface: #ffe4e1; --border: #ffb6c1; --text-main: #8b0000; --text-muted: #cd5c5c; }
+        /* Midnight Theme Overrides */
+        body.theme-midnight { --bg-color: #020617; --surface: #0f172a; --border: #3b82f6; --text-main: #e2e8f0; --text-muted: #64748b; }
+        /* Retro Typewriter Overrides */
+        body.theme-retro { --bg-color: #fdf6e3; --surface: #eee8d5; --border: #cba682; --text-main: #333; --text-muted: #839496; font-family: "Courier New", monospace !important; }
+        /* Neon Cyber Overrides */
+        body.theme-neon { --bg-color: #000; --surface: #111; --border: #ff00ff; --text-main: #0ff; --text-muted: #f0f; --primary: #0ff; --accent: #f0f; }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -122,15 +128,20 @@
         .btn-close-prompt { position: absolute; top: 0.5rem; right: 0.5rem; background: none; color: var(--text-muted); padding: 0; font-size: 1.2rem; border: none; }
         .btn-close-prompt:hover { color: var(--danger); background: none; }
 
-        /* "Pay Attention to Me" Overlay */
+        /* "Pay Attention to Me" Overlay - NOW MOVING & MASSIVE */
         .pay-attention-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 250px; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease; z-index: 8;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            pointer-events: none; overflow: hidden; z-index: 8;
+            opacity: 0; transition: opacity 0.3s ease;
         }
-        .pay-attention-overlay.active { opacity: 0.9; }
+        .pay-attention-overlay.active { opacity: 1; }
+        .moving-paw {
+            position: absolute;
+            font-size: 400px; /* Massive! */
+            text-shadow: 0 10px 50px rgba(0,0,0,0.8);
+            transition: top 0.4s ease-in-out, left 0.4s ease-in-out, transform 0.4s ease;
+            transform-origin: center;
+        }
 
         textarea {
             flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border);
@@ -215,10 +226,13 @@
         <div class="settings-panel">
             <label> Theme: 
                 <select id="theme-select">
-                    <option value="dark">Dark (Default)</option>
-                    <option value="light">Light (Blinding)</option>
-                    <option value="hacker">Hacker Mode</option>
-                    <option value="salmon">Salmon (Chaotic)</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                    <option value="hacker">Hacker</option>
+                    <option value="salmon">Salmon</option>
+                    <option value="midnight">Midnight</option>
+                    <option value="retro">Retro Typewriter</option>
+                    <option value="neon">Neon Cyber</option>
                 </select>
             </label>
             <label class="hardcore-label"><input type="checkbox" id="hardcore-toggle"> ☠️ Hardcore (No Backspace)</label>
@@ -251,7 +265,9 @@
             <button class="btn-close-prompt" id="btn-close-prompt">&times;</button>
         </div>
         <textarea id="editor" placeholder="Start typing... Don't stop. The cat is watching." spellcheck="false"></textarea>
-        <div id="pay-attention-overlay" class="pay-attention-overlay">🐈</div>
+        <div id="pay-attention-overlay" class="pay-attention-overlay">
+            <div id="moving-paw" class="moving-paw">🐈</div>
+        </div>
         <div class="progress-bar"><div class="progress-fill" id="streak-progress"></div></div>
     </div>
 
@@ -363,6 +379,7 @@
         const GIF_WATCHING = "https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif";
         const GIF_TYPING = "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif";
         const GIF_EATING = "https://media3.giphy.com/media/v1.Y2lkPTZjMDliOTUyZ2szbWp3MGJkMjF5dnBkNDU0ZmJxeGJ0anI2Z3JibW9uOW53b2tjcyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12cYyFxlbIgXeg/giphy.gif";
+        const GIF_SLEEPING = "https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif";
 
         // MUTABLE GAME CONSTANTS
         let baseIdleLimitMs = 3000; 
@@ -382,6 +399,7 @@
         let isMegaZoomies = false; 
         let isWaterSpilled = false;
         let isStickyPaws = false;
+        let pawMoveInterval = null;
         
         let peaceSeconds = 0;
         let idleTimeLeft = baseIdleLimitMs;
@@ -394,7 +412,14 @@
         const shopState = { confetti: { cost: 2, owned: false }, rain: { cost: 5, owned: false }, kittens: { cost: 10, owned: false } };
         let activeCosmetic = null;
 
-        const catStrings = ["aassddffffffff", "meow meow meow ", "[CAPSLOCK ON]", "1111111222222", "🐈🐾🐾🐾", " FEED ME TUNA ", "jsdfkljsdf", " purrrrrrrrr "];
+        // EXPANDED SABOTAGE STRINGS
+        const catStrings = [
+            "aassddffffffff", "meow meow meow ", "[CAPSLOCK ON]", "1111111222222", 
+            "🐈🐾🐾🐾", " FEED ME TUNA ", "jsdfkljsdf", " purrrrrrrrr ",
+            "(=^･ω･^=) ", "(^・x・^) ", "(=｀ω´=) ", "ฅ(＾・ω・＾ฅ) ",
+            "///w/// ", "zxcvbnm,./", "   ", "\n\n", "paws paws paws",
+            "!!!ATTENTION!!!", "( ⓛ ω ⓛ *) "
+        ];
 
         // Writing Prompts Array
         const writingPrompts = [
@@ -530,7 +555,7 @@
             if (roll < 9) { 
                 title = "✨ The Deep Sleep";
                 desc = "The cat passed out. You bought 60 seconds of glorious, uninterrupted peace.";
-                action = () => { triggerPeace(60); editor.classList.add('golden-halo'); setTimeout(() => editor.classList.remove('golden-halo'), 60000); };
+                action = () => { triggerPeace(60, 'sleeping'); editor.classList.add('golden-halo'); setTimeout(() => editor.classList.remove('golden-halo'), 60000); };
             } else if (roll < 18) { 
                 title = "💰 The Treat Stash";
                 desc = "The cat ripped open the bag. You found 10 Cat Treats!";
@@ -561,11 +586,32 @@
                 };
             } else if (roll < 65) { 
                 title = "🐾 Pay Attention to Me!";
-                desc = "The cat sits directly on your screen. You can type, but you won't be able to see for 15 seconds.";
+                desc = "The cat is actively jumping on your screen. Good luck seeing your text for the next 15 seconds.";
                 action = () => {
                     let overlay = document.getElementById('pay-attention-overlay');
+                    let paw = document.getElementById('moving-paw');
                     overlay.classList.add('active');
-                    setTimeout(() => overlay.classList.remove('active'), 15000);
+
+                    // Center it initially
+                    paw.style.top = "50%";
+                    paw.style.left = "50%";
+                    paw.style.transform = "translate(-50%, -50%) rotate(0deg)";
+
+                    pawMoveInterval = setInterval(() => {
+                        // Random percentage positions. Allowing slightly off-screen chaos (-10% to 70%)
+                        let randomTop = Math.random() * 80 - 10; 
+                        let randomLeft = Math.random() * 80 - 10;
+                        let randomRot = Math.random() * 60 - 30; // Random tilt -30 to 30 deg
+                        
+                        paw.style.top = `${randomTop}%`;
+                        paw.style.left = `${randomLeft}%`;
+                        paw.style.transform = `translate(0, 0) rotate(${randomRot}deg)`;
+                    }, 500);
+
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        clearInterval(pawMoveInterval);
+                    }, 15000);
                 };
             } else if (roll < 76) { 
                 title = "💦 Spilled Water Glass";
@@ -672,6 +718,7 @@
             if (state === 'watching') { if (catGif.src !== GIF_WATCHING) catGif.src = GIF_WATCHING; } 
             else if (state === 'typing') { catCamContainer.classList.add('sabotage'); if (catGif.src !== GIF_TYPING) catGif.src = GIF_TYPING; } 
             else if (state === 'eating') { catCamContainer.classList.add('peace'); if (catGif.src !== GIF_EATING) catGif.src = GIF_EATING; }
+            else if (state === 'sleeping') { catCamContainer.classList.add('peace'); if (catGif.src !== GIF_SLEEPING) catGif.src = GIF_SLEEPING; }
         }
 
         function updateUI() {
@@ -770,8 +817,8 @@
 
         editor.addEventListener('input', handleInput);
 
-        function triggerPeace(durationSeconds) {
-            isPeaceTime = true; stopSabotage(); setCatState('eating');
+        function triggerPeace(durationSeconds, stateType = 'eating') {
+            isPeaceTime = true; stopSabotage(); setCatState(stateType);
             peaceSeconds = durationSeconds; streak = 0; updateUI();
             clearInterval(peaceTimerInterval); 
             peaceTimerInterval = setInterval(() => {
@@ -786,7 +833,7 @@
         btnFeed.addEventListener('click', () => {
             if (catTreats > 0 && !isPeaceTime) {
                 catTreats--;
-                triggerPeace(PEACE_DURATION_SEC);
+                triggerPeace(PEACE_DURATION_SEC, 'eating');
             }
         });
 
