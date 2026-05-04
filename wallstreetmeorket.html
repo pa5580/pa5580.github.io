@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Street Meow-rket Terminal</title>
+    <title>Wall Street Meow-rket - Survival Mode</title>
     <style>
         /* Bloomberg Terminal Aesthetic */
         :root {
@@ -16,6 +16,7 @@
             --down: #ff0033;
             --accent: #f5a623;
             --panel-bg: #1a1a1a;
+            --expense: #ff00ff;
         }
 
         * { box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
@@ -40,35 +41,41 @@
         }
         .time-display .day-label { color: var(--text-muted); font-size: 0.8rem; display: block; }
         .time-display .clock { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
-        .time-display.warning .clock { color: var(--down); animation: blink 1s infinite; }
+        .time-display.warning .clock { color: var(--down); animation: blink 0.5s infinite; }
 
-        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes blink { 50% { opacity: 0.2; } }
 
         .portfolio-summary {
-            display: flex; gap: 2rem; background-color: var(--panel-bg);
+            display: flex; gap: 1.5rem; background-color: var(--panel-bg);
             padding: 0.5rem 1.5rem; border-radius: 4px; border: 1px solid var(--border);
         }
 
         .stat-box { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
         .stat-value { font-size: 1.5rem; font-weight: bold; }
+        
+        /* The Survival Target Box */
+        .expense-box { border-color: var(--expense) !important; background-color: rgba(255,0,255,0.05) !important; }
+        .expense-label { color: var(--expense) !important; animation: pulseExpense 2s infinite; }
+        .expense-value { color: var(--expense); }
+        @keyframes pulseExpense { 50% { color: #fff; } }
 
         /* Main Dashboard Layout */
-        .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; flex-grow: 1; overflow: hidden; }
+        .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; flex-grow: 1; overflow: hidden; position: relative; }
 
         .panel {
             background-color: var(--surface); border: 1px solid var(--border);
-            border-radius: 4px; display: flex; flex-direction: column;
+            border-radius: 4px; display: flex; flex-direction: column; position: relative;
         }
 
         .panel-header {
             background-color: var(--panel-bg); padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border); font-weight: bold; text-transform: uppercase;
-            color: var(--accent); display: flex; justify-content: space-between;
+            color: var(--accent); display: flex; justify-content: space-between; z-index: 2;
         }
 
         /* Market Watch (Left Side) */
-        .market-list { display: flex; flex-direction: column; overflow-y: auto; flex-grow: 1; }
+        .market-list { display: flex; flex-direction: column; overflow-y: auto; flex-grow: 1; z-index: 1; }
 
         .stock-row {
             display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 1rem;
@@ -86,8 +93,8 @@
         .price-down { color: var(--down); text-shadow: 0 0 5px rgba(255,0,51,0.5); }
 
         /* Trading Desk & Inventory (Right Side) */
-        .trading-desk { padding: 1rem; border-bottom: 1px solid var(--border); }
-        .inventory { flex-grow: 1; padding: 1rem; overflow-y: auto; }
+        .trading-desk { padding: 1rem; border-bottom: 1px solid var(--border); z-index: 1; position: relative; }
+        .inventory { flex-grow: 1; padding: 1rem; overflow-y: auto; z-index: 1; }
 
         .trade-controls { display: flex; flex-direction: column; gap: 1rem; }
 
@@ -98,11 +105,11 @@
 
         .input-group { display: flex; gap: 0.5rem; align-items: center; }
 
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             background: #000; color: var(--text-main); border: 1px solid var(--border);
-            padding: 0.5rem; font-size: 1.2rem; width: 100%; outline: none;
+            padding: 0.5rem; font-size: 1.2rem; width: 100%; outline: none; text-transform: uppercase;
         }
-        input[type="number"]:focus { border-color: var(--accent); }
+        input:focus { border-color: var(--accent); }
         input:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-group { display: flex; gap: 0.5rem; }
@@ -121,20 +128,33 @@
         .holdings-list { margin-top: 1rem; }
         .holding-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--border); }
 
-        /* Scrolling News */
-        .news-ticker-container {
-            margin-top: 1rem; background-color: var(--panel-bg); border: 1px solid var(--border);
-            padding: 0.5rem; white-space: nowrap; overflow: hidden; position: relative; display: flex; align-items: center;
+        /* --- WARIOWARE EMERGENCY CSS --- */
+        .emergency-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
         }
-        .ticker-label { background: var(--accent); color: #000; padding: 0 0.5rem; font-weight: bold; margin-right: 1rem; z-index: 2; }
-        .scrolling-news { display: inline-block; animation: scrollNews 25s linear infinite; color: var(--text-muted); }
-        @keyframes scrollNews { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .emergency-overlay.active { opacity: 1; pointer-events: auto; }
 
-        /* Visual Flash Effect for UI Updates */
-        .flash-buy { animation: flashGreen 0.5s; }
-        .flash-sell { animation: flashRed 0.5s; }
-        @keyframes flashGreen { 0% { background-color: rgba(0,255,0,0.3); } 100% { background-color: transparent; } }
-        @keyframes flashRed { 0% { background-color: rgba(255,0,51,0.3); } 100% { background-color: transparent; } }
+        /* 1. Keyboard Sit */
+        #em-keyboard { background: rgba(0,0,0,0.9); border: 2px solid var(--down); backdrop-filter: blur(5px); }
+        .ascii-cat { font-family: monospace; white-space: pre; font-size: 20px; color: var(--accent); font-weight: bold; text-align: center; margin-bottom: 2rem;}
+        .panic-text { color: var(--down); font-size: 2rem; font-weight: bold; animation: blink 0.2s infinite; margin-bottom: 1rem;}
+        #shoo-input { max-width: 300px; text-align: center; border-color: var(--down); font-size: 2rem; }
+
+        /* 2. Hairball */
+        .hairball-blob {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 250px; height: 150px; background: radial-gradient(circle, #5c5c3d 0%, #333300 100%);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; border: 3px solid #222;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            cursor: pointer; z-index: 100; animation: pulseBlob 2s infinite alternate; user-select: none;
+        }
+        @keyframes pulseBlob { 0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; } 100% { border-radius: 60% 40% 30% 70% / 60% 50% 40% 50%; } }
+        
+        /* 3. Spilled Water */
+        #em-water { background: rgba(0, 100, 255, 0.4); backdrop-filter: blur(8px); border: 2px solid #0ff; align-items: center; justify-content: center;}
+        #btn-wipe { background: #0ff; color: #000; font-size: 1.5rem; padding: 2rem; border-radius: 50%; width: 150px; height: 150px; box-shadow: 0 0 20px #0ff;}
 
         /* --- MODALS --- */
         .modal-overlay {
@@ -146,8 +166,7 @@
 
         .modal-content {
             background: var(--bg-color); border: 2px solid var(--up); padding: 2rem;
-            max-width: 600px; width: 90%; border-radius: 0; box-shadow: 0 0 20px rgba(0,255,0,0.2);
-            text-align: center;
+            max-width: 600px; width: 90%; border-radius: 0; box-shadow: 0 0 20px rgba(0,255,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto;
         }
         
         .modal-content h2 { color: var(--up); margin-top: 0; border-bottom: 1px dashed var(--border); padding-bottom: 1rem; }
@@ -155,13 +174,21 @@
         .modal-content ul { text-align: left; color: var(--text-muted); margin-bottom: 2rem; }
         .modal-content li { margin-bottom: 0.5rem; }
 
-        .eod-stats { display: flex; justify-content: space-around; margin: 2rem 0; background: #000; padding: 1rem; border: 1px solid var(--border); }
-        .eod-profit { font-size: 2rem; font-weight: bold; }
-        
+        .eod-stats { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; background: #000; padding: 1.5rem; border: 1px solid var(--border); text-align: left; }
+        .eod-row { display: flex; justify-content: space-between; font-size: 1.2rem; }
+        .eod-row.total-row { border-top: 1px dashed var(--text-muted); padding-top: 1rem; font-weight: bold; font-size: 1.5rem; }
         .cat-quote { font-style: italic; color: var(--accent); margin: 1.5rem 0; font-size: 1.1rem; }
+        
+        .game-over-text { color: var(--down); font-size: 3rem; font-weight: bold; text-shadow: 0 0 20px rgba(255,0,0,0.5); margin: 0;}
 
-        .chart-container { width: 100%; height: 150px; background: #000; border: 1px solid var(--border); margin: 1rem 0; position: relative; }
-        .chart-label { position: absolute; top: 5px; left: 5px; font-size: 0.7rem; color: var(--text-muted); }
+        /* Scrolling News */
+        .news-ticker-container {
+            margin-top: 1rem; background-color: var(--panel-bg); border: 1px solid var(--border);
+            padding: 0.5rem; white-space: nowrap; overflow: hidden; position: relative; display: flex; align-items: center;
+        }
+        .ticker-label { background: var(--accent); color: #000; padding: 0 0.5rem; font-weight: bold; margin-right: 1rem; z-index: 2; }
+        .scrolling-news { display: inline-block; animation: scrollNews 25s linear infinite; color: var(--text-muted); }
+        @keyframes scrollNews { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
     </style>
 </head>
@@ -169,46 +196,47 @@
 
     <div class="modal-overlay active" id="modal-instructions">
         <div class="modal-content">
-            <h2>SYSTEM BOOT: MEOW-RKET OS</h2>
-            <p>Welcome to the trading floor. You have $1,000. Your goal is to not go broke while navigating a market driven entirely by cat logic.</p>
+            <h2>SYSTEM BOOT: TAMAGOTCHI SURVIVAL OS</h2>
+            <p>Welcome to the trading floor. You have $1,000. But more importantly, you have a cat with expensive taste.</p>
             <ul>
-                <li><strong>The Clock:</strong> The market is only open for 60 seconds each "Day".</li>
-                <li><strong>The Hustle:</strong> Buy low. Sell high. Watch the ticker.</li>
-                <li><strong>The Catch:</strong> The cats run the market. Prices will swing wildly for no logical human reason.</li>
+                <li><strong>The Hustle:</strong> The market is only open for 60 seconds each "Day". Buy low, sell high.</li>
+                <li><strong>The Quota:</strong> At the end of every day, you MUST pay the Cat Lifestyle Expense out of your Available Cash.</li>
+                <li><strong>The Danger:</strong> The daily expense goes up every single day. If you don't have enough liquid cash at the bell, you are Bankrupt.</li>
+                <li><strong>The Chaos:</strong> Your cat will attack your terminal while you trade. Deal with the emergencies quickly.</li>
             </ul>
             <button class="btn-action" onclick="startGame()">INITIALIZE TRADING</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal-eod">
-        <div class="modal-content" style="border-color: var(--accent); box-shadow: 0 0 20px rgba(245, 166, 35, 0.2);">
+        <div class="modal-content" id="eod-content" style="border-color: var(--accent); box-shadow: 0 0 20px rgba(245, 166, 35, 0.2);">
             <h2>END OF DAY <span id="eod-day-label">1</span></h2>
             
-            <div class="chart-container" id="chart-container">
-                <span class="chart-label">Net Worth Intraday Chart</span>
-                </div>
-
             <div class="eod-stats">
-                <div class="stat-box">
-                    <span class="stat-label">Daily Profit / Loss</span>
-                    <span class="eod-profit" id="eod-profit-display">$0.00</span>
+                <div class="eod-row">
+                    <span>Available Cash:</span>
+                    <span id="eod-starting-cash">$0.00</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">Total Net Worth</span>
-                    <span class="stat-value" id="eod-networth-display" style="color: var(--text-main);">$1,000.00</span>
+                <div class="eod-row" style="color: var(--expense);">
+                    <span>Cat Lifestyle Deduction:</span>
+                    <span id="eod-expense">-$0.00</span>
+                </div>
+                <div class="eod-row total-row" id="eod-remaining-row">
+                    <span>Remaining Cash:</span>
+                    <span id="eod-remaining-cash">$0.00</span>
                 </div>
             </div>
 
             <p class="cat-quote" id="cat-quote">"Meow."</p>
 
-            <button class="btn-action" onclick="nextDay()">RING BELL FOR DAY <span id="next-day-btn-label">2</span></button>
+            <button class="btn-action" id="btn-next-day" onclick="nextDay()">RING BELL FOR DAY <span id="next-day-btn-label">2</span></button>
         </div>
     </div>
 
     <header>
         <div class="title-block">
             <h1>Wall Street Meow-rket</h1>
-            <p>Terminal v1.0.0 // STATUS: <span id="header-status">OFFLINE</span></p>
+            <p>Terminal v2.0 // SURVIVAL MODE</p>
         </div>
         
         <div class="time-display" id="time-display">
@@ -217,9 +245,13 @@
         </div>
 
         <div class="portfolio-summary">
+            <div class="stat-box expense-box">
+                <span class="stat-label expense-label">DUE AT BELL (CAT EXPENSE)</span>
+                <span class="stat-value expense-value" id="expense-display">$50.00</span>
+            </div>
             <div class="stat-box">
-                <span class="stat-label">Available Cash</span>
-                <span class="stat-value" id="cash-display">$1,000.00</span>
+                <span class="stat-label">Available Cash (Liquid)</span>
+                <span class="stat-value" id="cash-display" style="color: var(--up)">$1,000.00</span>
             </div>
             <div class="stat-box">
                 <span class="stat-label">Total Net Worth</span>
@@ -229,6 +261,30 @@
     </header>
 
     <div class="dashboard">
+        <div class="emergency-overlay" id="em-keyboard">
+            <div class="panic-text">EMERGENCY: CAT ON KEYBOARD</div>
+            <div class="ascii-cat">
+  /\_/\  
+ ( o.o ) 
+  > ^ <  
+            </div>
+            <p>TYPE "SHOO" TO REMOVE CAT</p>
+            <input type="text" id="shoo-input" autocomplete="off">
+        </div>
+
+        <div class="emergency-overlay" id="em-hairball" style="background: rgba(0,0,0,0.5);">
+            <div class="hairball-blob" id="hairball-blob">
+                <span style="color: #000; font-weight: bold; font-size: 1.5rem;">HAIRBALL!</span>
+                <span id="hairball-clicks" style="color: #000;">CLICKS LEFT: 5</span>
+            </div>
+        </div>
+
+        <div class="emergency-overlay" id="em-water">
+            <div class="panic-text" style="color: #0ff;">EMERGENCY: SPILLED WATER</div>
+            <p>TERMINAL SHORT CIRCUITING. DRY IT!</p>
+            <button id="btn-wipe">WIPE<br><span id="water-clicks">5</span></button>
+        </div>
+
         <div class="panel">
             <div class="panel-header">
                 <span>Live Market</span>
@@ -238,7 +294,7 @@
                 </div>
         </div>
 
-        <div class="panel">
+        <div class="panel" id="trading-panel">
             <div class="panel-header">Trading Desk</div>
             
             <div class="trading-desk">
@@ -254,8 +310,8 @@
                     </div>
 
                     <div class="btn-group">
-                        <button class="btn-buy" id="btn-buy" disabled>POUNCE (BUY)</button>
-                        <button class="btn-sell" id="btn-sell" disabled>DROP (SELL)</button>
+                        <button class="btn-buy" id="btn-buy" disabled>BUY</button>
+                        <button class="btn-sell" id="btn-sell" disabled>SELL</button>
                     </div>
                 </div>
             </div>
@@ -285,8 +341,6 @@
             cash: 1000.00,
             selectedTicker: 'TUNA',
             isMarketOpen: false,
-            startOfDayNetWorth: 1000.00,
-            dailyNetWorthHistory: [], // Used for the EOD chart
             holdings: { TUNA: 0, NIP: 0, BXS: 0, LSR: 0 }
         };
 
@@ -297,12 +351,18 @@
             LSR:  { name: "Red Dot Tech", price: 210.00, history: [210.00], volatility: 0.12, trend: 0 }
         };
 
+        // EXPENSE SCALING (Gets brutal fast)
+        const dailyExpenses = [0, 50, 150, 350, 750, 1500, 3000, 5500, 10000, 20000];
+        function getExpense() { return gameState.day <= 10 ? dailyExpenses[gameState.day] : dailyExpenses[9] * Math.pow(1.5, gameState.day - 10); }
+
         let timerInterval;
         let marketTickInterval;
+        let emergencyTimers = [];
 
         // DOM Elements
         const cashDisplay = document.getElementById('cash-display');
         const networthDisplay = document.getElementById('networth-display');
+        const expenseDisplay = document.getElementById('expense-display');
         const marketList = document.getElementById('market-list');
         const holdingsList = document.getElementById('holdings-list');
         const tradeTickerDisplay = document.getElementById('trade-ticker');
@@ -310,11 +370,8 @@
         const qtyInput = document.getElementById('trade-qty');
         const btnBuy = document.getElementById('btn-buy');
         const btnSell = document.getElementById('btn-sell');
-        
         const clockDisplay = document.getElementById('clock');
         const timeContainer = document.getElementById('time-display');
-        const marketStatus = document.getElementById('market-status');
-        const headerStatus = document.getElementById('header-status');
 
         // --- CORE GAMEPLAY LOGIC ---
 
@@ -324,34 +381,21 @@
 
         function calculateNetWorth() {
             let totalValue = gameState.cash;
-            for (let ticker in gameState.holdings) {
-                totalValue += (gameState.holdings[ticker] * market[ticker].price);
-            }
+            for (let ticker in gameState.holdings) totalValue += (gameState.holdings[ticker] * market[ticker].price);
             return totalValue;
         }
 
         function tickMarket() {
             if (!gameState.isMarketOpen) return;
-
             for (let ticker in market) {
                 let stock = market[ticker];
-                let oldPrice = stock.price;
-                
                 let changePercent = (Math.random() * stock.volatility * 2) - stock.volatility; 
-                changePercent += stock.trend; 
-
-                let newPrice = oldPrice + (oldPrice * changePercent);
+                let newPrice = stock.price + (stock.price * changePercent);
                 if (newPrice < 0.01) newPrice = 0.01; 
-
-                stock.history.push(oldPrice);
+                stock.history.push(stock.price);
                 if (stock.history.length > 50) stock.history.shift(); 
-                
                 stock.price = newPrice;
             }
-            
-            // Record portfolio performance for the EOD chart
-            gameState.dailyNetWorthHistory.push(calculateNetWorth());
-
             renderMarket();
             renderPortfolio();
         }
@@ -366,13 +410,11 @@
         function startDay() {
             gameState.timeLeft = DAY_LENGTH_SEC;
             gameState.isMarketOpen = true;
-            gameState.dailyNetWorthHistory = [calculateNetWorth()];
-            gameState.startOfDayNetWorth = calculateNetWorth();
             
             qtyInput.disabled = false;
-            marketStatus.innerText = "● OPEN";
-            marketStatus.style.color = "var(--up)";
-            headerStatus.innerText = "ONLINE";
+            document.getElementById('market-status').innerText = "● OPEN";
+            document.getElementById('market-status').style.color = "var(--up)";
+            expenseDisplay.innerText = formatMoney(getExpense());
 
             updateClockUI();
             
@@ -380,59 +422,71 @@
             timerInterval = setInterval(() => {
                 gameState.timeLeft--;
                 updateClockUI();
-                
-                if (gameState.timeLeft <= 0) {
-                    endDay();
-                }
+                if (gameState.timeLeft <= 0) endDay();
             }, 1000);
 
             clearInterval(marketTickInterval);
             marketTickInterval = setInterval(tickMarket, 2000);
             
+            // Schedule WarioWare Emergencies
+            scheduleEmergencies();
             renderMarket();
         }
 
         function updateClockUI() {
             let secs = gameState.timeLeft;
             clockDisplay.innerText = `0:${secs < 10 ? '0' + secs : secs}`;
-            
-            if (secs <= 10 && secs > 0) {
-                timeContainer.classList.add('warning');
-            } else {
-                timeContainer.classList.remove('warning');
-            }
+            if (secs <= 10 && secs > 0) timeContainer.classList.add('warning');
+            else timeContainer.classList.remove('warning');
         }
 
         function endDay() {
             clearInterval(timerInterval);
             clearInterval(marketTickInterval);
-            gameState.isMarketOpen = false;
+            emergencyTimers.forEach(t => clearTimeout(t)); // Cancel pending emergencies
             
+            // Clear any active emergencies instantly
+            document.querySelectorAll('.emergency-overlay').forEach(el => el.classList.remove('active'));
+
+            gameState.isMarketOpen = false;
             qtyInput.disabled = true;
             btnBuy.disabled = true;
             btnSell.disabled = true;
-            marketStatus.innerText = "● CLOSED";
-            marketStatus.style.color = "var(--down)";
+            document.getElementById('market-status').innerText = "● CLOSED";
+            document.getElementById('market-status').style.color = "var(--down)";
 
-            // Calculate EOD Stats
-            let currentNetWorth = calculateNetWorth();
-            let profit = currentNetWorth - gameState.startOfDayNetWorth;
-            
+            let expense = getExpense();
+            let startingCash = gameState.cash;
+            gameState.cash -= expense; // The Tamagotchi Deduction
+            let isBankrupt = gameState.cash < 0;
+
             document.getElementById('eod-day-label').innerText = gameState.day;
-            document.getElementById('eod-networth-display').innerText = formatMoney(currentNetWorth);
+            document.getElementById('eod-starting-cash').innerText = formatMoney(startingCash);
+            document.getElementById('eod-expense').innerText = "-" + formatMoney(expense);
             
-            let profitEl = document.getElementById('eod-profit-display');
-            profitEl.innerText = (profit >= 0 ? '+' : '') + formatMoney(profit);
-            profitEl.style.color = profit >= 0 ? "var(--up)" : "var(--down)";
+            let remainingEl = document.getElementById('eod-remaining-cash');
+            remainingEl.innerText = formatMoney(gameState.cash);
+            
+            let modalContent = document.getElementById('eod-content');
+            let nextBtn = document.getElementById('btn-next-day');
+            let quoteEl = document.getElementById('cat-quote');
 
-            // Generate SVG Chart
-            document.getElementById('chart-container').innerHTML = `<span class="chart-label">Net Worth Intraday Chart</span>` + generateChartSVG(gameState.dailyNetWorthHistory);
+            if (isBankrupt) {
+                remainingEl.style.color = "var(--down)";
+                modalContent.style.borderColor = "var(--down)";
+                quoteEl.innerHTML = `<div class="game-over-text">BANKRUPT.</div><br>"You couldn't even afford my premium wet food. I am leaving you for a Hedge Fund manager."`;
+                nextBtn.innerText = "GAME OVER - REFRESH TO RESTART";
+                nextBtn.onclick = () => location.reload();
+            } else {
+                remainingEl.style.color = "var(--up)";
+                modalContent.style.borderColor = "var(--accent)";
+                quoteEl.innerText = `"Acceptable. I will allow you to feed me tomorrow. My tastes are getting more expensive, though."`;
+                document.getElementById('next-day-btn-label').innerText = gameState.day + 1;
+                nextBtn.onclick = nextDay;
+            }
 
-            // Select Cat Quote
-            document.getElementById('cat-quote').innerText = getCatQuote(profit);
-
-            document.getElementById('next-day-btn-label').innerText = gameState.day + 1;
             document.getElementById('modal-eod').classList.add('active');
+            renderPortfolio();
         }
 
         function nextDay() {
@@ -442,64 +496,96 @@
             startDay();
         }
 
-        function generateChartSVG(data) {
-            if (data.length < 2) return '';
-            let min = Math.min(...data);
-            let max = Math.max(...data);
+        // --- WARIOWARE EMERGENCY SYSTEM ---
+        
+        function scheduleEmergencies() {
+            // Day 1: 1 emergency. Day 2+: 2 emergencies.
+            let numEmergencies = gameState.day === 1 ? 1 : 2;
             
-            // Add padding to min/max so lines don't hit the absolute edges
-            let padding = (max - min) * 0.1 || max * 0.05; 
-            min -= padding; max += padding;
+            let time1 = Math.random() * 15000 + 5000; // Between 5s and 20s
+            emergencyTimers.push(setTimeout(triggerRandomEmergency, time1));
 
-            let width = 1000; // Using an arbitrary large viewbox width for smooth rendering
-            let height = 150;
-            
-            let points = data.map((val, i) => {
-                let x = (i / (data.length - 1)) * width;
-                let y = height - ((val - min) / (max - min)) * height;
-                return `${x},${y}`;
-            }).join(' ');
-
-            let color = data[data.length-1] >= data[0] ? 'var(--up)' : 'var(--down)';
-
-            return `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
-                        <polyline fill="none" stroke="${color}" stroke-width="3" points="${points}" />
-                    </svg>`;
+            if (numEmergencies > 1) {
+                let time2 = Math.random() * 20000 + 30000; // Between 30s and 50s
+                emergencyTimers.push(setTimeout(triggerRandomEmergency, time2));
+            }
         }
 
-        function getCatQuote(profit) {
-            const quotesWinHuge = [
-                '"We own the cardboard box factory now. Tremble before us."',
-                '"I knocked your portfolio off the table, and it landed on a pile of money. Meow."',
-                '"Cancel the dry kibble. Tonight, we dine on the finest Norwegian Salmon."'
-            ];
-            const quotesWinSmall = [
-                '"Caught the laser! Good job, human."',
-                '"A minor success. I will allow you to scratch behind my ears for exactly 4 seconds."',
-                '"Not bad. I was going to bite your ankle, but I will spare you."'
-            ];
-            const quotesNeutral = [
-                '"The red dot eludes us, but we live to chase it another day."',
-                '"I slept through the trading day. Apparently, so did you."'
-            ];
-            const quotesLossSmall = [
-                '"I stepped on the keyboard and accidentally sold your shares. Oops."',
-                '"This portfolio is as disappointing as the bottom of an empty food bowl."',
-                '"Why did you buy the dip? The dip was made of citrus. I hate citrus."'
-            ];
-            const quotesLossHuge = [
-                '"Instructions unclear, bought the dip, it kept dipping. Need wet food."',
-                '"I am going to throw up on the rug to reflect my feelings on your trading strategy."',
-                '"You are a terrible provider. I am packing my favorite toy mouse and leaving."'
-            ];
-
-            if (profit > 500) return quotesWinHuge[Math.floor(Math.random() * quotesWinHuge.length)];
-            if (profit > 10)  return quotesWinSmall[Math.floor(Math.random() * quotesWinSmall.length)];
-            if (profit > -10) return quotesNeutral[Math.floor(Math.random() * quotesNeutral.length)];
-            if (profit > -500) return quotesLossSmall[Math.floor(Math.random() * quotesLossSmall.length)];
-            return quotesLossHuge[Math.floor(Math.random() * quotesLossHuge.length)];
+        function triggerRandomEmergency() {
+            if (!gameState.isMarketOpen) return;
+            const events = [startKeyboardSit, startHairball, startWaterSpill];
+            let randomEvent = events[Math.floor(Math.random() * events.length)];
+            randomEvent();
         }
 
+        // Minigame 1: Keyboard
+        function startKeyboardSit() {
+            let overlay = document.getElementById('em-keyboard');
+            let input = document.getElementById('shoo-input');
+            overlay.classList.add('active');
+            input.value = "";
+            input.focus();
+            
+            // Disable actual trading
+            btnBuy.disabled = true; btnSell.disabled = true;
+
+            input.oninput = (e) => {
+                if (e.target.value.toUpperCase() === "SHOO") {
+                    overlay.classList.remove('active');
+                    validateTradeButtons(); // Re-enable trading
+                }
+            };
+        }
+
+        // Minigame 2: Hairball
+        let hairballClicks = 5;
+        function startHairball() {
+            let overlay = document.getElementById('em-hairball');
+            let blob = document.getElementById('hairball-blob');
+            let label = document.getElementById('hairball-clicks');
+            
+            // Randomize position slightly over the trading desk
+            blob.style.top = (40 + Math.random() * 20) + '%';
+            blob.style.left = (40 + Math.random() * 20) + '%';
+            
+            hairballClicks = 5;
+            label.innerText = `CLICKS LEFT: ${hairballClicks}`;
+            overlay.classList.add('active');
+            btnBuy.disabled = true; btnSell.disabled = true;
+
+            blob.onclick = () => {
+                hairballClicks--;
+                label.innerText = `CLICKS LEFT: ${hairballClicks}`;
+                blob.style.transform = `translate(-50%, -50%) scale(${1 - (5 - hairballClicks)*0.1})`;
+                if (hairballClicks <= 0) {
+                    overlay.classList.remove('active');
+                    blob.style.transform = `translate(-50%, -50%) scale(1)`; // reset for next time
+                    validateTradeButtons();
+                }
+            };
+        }
+
+        // Minigame 3: Water Spill
+        let waterClicks = 5;
+        function startWaterSpill() {
+            let overlay = document.getElementById('em-water');
+            let btn = document.getElementById('btn-wipe');
+            let label = document.getElementById('water-clicks');
+            
+            waterClicks = 5;
+            label.innerText = waterClicks;
+            overlay.classList.add('active');
+            btnBuy.disabled = true; btnSell.disabled = true;
+
+            btn.onclick = () => {
+                waterClicks--;
+                label.innerText = waterClicks;
+                if (waterClicks <= 0) {
+                    overlay.classList.remove('active');
+                    validateTradeButtons();
+                }
+            };
+        }
 
         // --- UI RENDERING ---
 
@@ -539,6 +625,15 @@
         function renderPortfolio() {
             cashDisplay.innerText = formatMoney(gameState.cash);
             
+            // Flash red if current cash is less than the required daily expense
+            if (gameState.cash < getExpense()) {
+                cashDisplay.style.color = "var(--down)";
+                cashDisplay.style.animation = "blink 0.5s infinite";
+            } else {
+                cashDisplay.style.color = "var(--up)";
+                cashDisplay.style.animation = "none";
+            }
+
             let totalValue = calculateNetWorth();
             holdingsList.innerHTML = '';
 
@@ -570,7 +665,13 @@
         }
 
         function validateTradeButtons() {
-            if (!gameState.isMarketOpen) return;
+            // Check if a WarioWare event is blocking
+            let isBlocked = document.querySelectorAll('.emergency-overlay.active').length > 0;
+            if (!gameState.isMarketOpen || isBlocked) {
+                btnBuy.disabled = true; btnSell.disabled = true;
+                return;
+            }
+
             let qty = parseInt(qtyInput.value) || 0;
             let currentPrice = market[gameState.selectedTicker].price;
             let cost = qty * currentPrice;
