@@ -18,113 +18,64 @@
             --panel-bg: #1a1a1a;
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
-        }
+        * { box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 1rem;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background-color: var(--bg-color); color: var(--text-main); margin: 0;
+            padding: 1rem; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
         /* Top Header / Portfolio Summary */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;
         }
 
-        .title-block h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+        .title-block h1 { margin: 0; font-size: 1.5rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .title-block p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
 
-        .title-block p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+        .time-display {
+            text-align: center; background: #000; border: 1px dashed var(--accent);
+            padding: 0.5rem 1rem; border-radius: 4px;
         }
+        .time-display .day-label { color: var(--text-muted); font-size: 0.8rem; display: block; }
+        .time-display .clock { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+        .time-display.warning .clock { color: var(--down); animation: blink 1s infinite; }
+
+        @keyframes blink { 50% { opacity: 0; } }
 
         .portfolio-summary {
-            display: flex;
-            gap: 2rem;
-            background-color: var(--panel-bg);
-            padding: 0.5rem 1.5rem;
-            border-radius: 4px;
-            border: 1px solid var(--border);
+            display: flex; gap: 2rem; background-color: var(--panel-bg);
+            padding: 0.5rem 1.5rem; border-radius: 4px; border: 1px solid var(--border);
         }
 
-        .stat-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
+        .stat-box { display: flex; flex-direction: column; align-items: flex-end; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
         .stat-value { font-size: 1.5rem; font-weight: bold; }
 
         /* Main Dashboard Layout */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
-            flex-grow: 1;
-            overflow: hidden;
-        }
+        .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; flex-grow: 1; overflow: hidden; }
 
         .panel {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
+            background-color: var(--surface); border: 1px solid var(--border);
+            border-radius: 4px; display: flex; flex-direction: column;
         }
 
         .panel-header {
-            background-color: var(--panel-bg);
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-weight: bold;
-            text-transform: uppercase;
-            color: var(--accent);
-            display: flex;
-            justify-content: space-between;
+            background-color: var(--panel-bg); padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-weight: bold; text-transform: uppercase;
+            color: var(--accent); display: flex; justify-content: space-between;
         }
 
         /* Market Watch (Left Side) */
-        .market-list {
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
+        .market-list { display: flex; flex-direction: column; overflow-y: auto; flex-grow: 1; }
 
         .stock-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr 1fr;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 1rem;
+            border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background-color 0.2s;
         }
 
-        .stock-row:hover, .stock-row.active {
-            background-color: #222;
-        }
+        .stock-row:hover, .stock-row.active { background-color: #222; }
 
         .ticker { font-size: 1.2rem; font-weight: bold; }
         .company-name { font-size: 0.8rem; color: var(--text-muted); display: block; }
@@ -138,94 +89,46 @@
         .trading-desk { padding: 1rem; border-bottom: 1px solid var(--border); }
         .inventory { flex-grow: 1; padding: 1rem; overflow-y: auto; }
 
-        .trade-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        .trade-controls { display: flex; flex-direction: column; gap: 1rem; }
 
         .selected-stock-display {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #000;
-            padding: 1rem;
-            border: 1px dashed var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: #000; padding: 1rem; border: 1px dashed var(--border);
         }
 
-        .input-group {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
+        .input-group { display: flex; gap: 0.5rem; align-items: center; }
 
         input[type="number"] {
-            background: #000;
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            padding: 0.5rem;
-            font-size: 1.2rem;
-            width: 100%;
-            font-family: 'Courier New', Courier, monospace;
-            outline: none;
+            background: #000; color: var(--text-main); border: 1px solid var(--border);
+            padding: 0.5rem; font-size: 1.2rem; width: 100%; outline: none;
         }
         input[type="number"]:focus { border-color: var(--accent); }
+        input:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-group { display: flex; gap: 0.5rem; }
         button {
-            flex: 1;
-            padding: 0.75rem;
-            font-size: 1rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            flex: 1; padding: 0.75rem; font-size: 1rem; font-weight: bold; text-transform: uppercase;
+            border: none; cursor: pointer; transition: opacity 0.2s;
         }
-        button:hover { opacity: 0.8; }
-        button:active { transform: scale(0.98); }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
+        button:hover:not(:disabled) { opacity: 0.8; }
+        button:active:not(:disabled) { transform: scale(0.98); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
         .btn-buy { background-color: var(--up); color: #000; }
         .btn-sell { background-color: var(--down); color: #fff; }
+        .btn-action { background-color: var(--accent); color: #000; margin-top: 1rem; width: 100%; }
 
         .holdings-list { margin-top: 1rem; }
-        .holding-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px dashed var(--border);
-        }
+        .holding-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--border); }
 
-        /* News Ticker (Bottom) */
+        /* Scrolling News */
         .news-ticker-container {
-            margin-top: 1rem;
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            padding: 0.5rem;
-            white-space: nowrap;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
+            margin-top: 1rem; background-color: var(--panel-bg); border: 1px solid var(--border);
+            padding: 0.5rem; white-space: nowrap; overflow: hidden; position: relative; display: flex; align-items: center;
         }
-        .ticker-label {
-            background: var(--accent);
-            color: #000;
-            padding: 0 0.5rem;
-            font-weight: bold;
-            margin-right: 1rem;
-            z-index: 2;
-        }
-        .scrolling-news {
-            display: inline-block;
-            animation: scrollNews 25s linear infinite;
-            color: var(--text-muted);
-        }
-        @keyframes scrollNews {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
+        .ticker-label { background: var(--accent); color: #000; padding: 0 0.5rem; font-weight: bold; margin-right: 1rem; z-index: 2; }
+        .scrolling-news { display: inline-block; animation: scrollNews 25s linear infinite; color: var(--text-muted); }
+        @keyframes scrollNews { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
         /* Visual Flash Effect for UI Updates */
         .flash-buy { animation: flashGreen 0.5s; }
@@ -233,15 +136,86 @@
         @keyframes flashGreen { 0% { background-color: rgba(0,255,0,0.3); } 100% { background-color: transparent; } }
         @keyframes flashRed { 0% { background-color: rgba(255,0,51,0.3); } 100% { background-color: transparent; } }
 
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--bg-color); border: 2px solid var(--up); padding: 2rem;
+            max-width: 600px; width: 90%; border-radius: 0; box-shadow: 0 0 20px rgba(0,255,0,0.2);
+            text-align: center;
+        }
+        
+        .modal-content h2 { color: var(--up); margin-top: 0; border-bottom: 1px dashed var(--border); padding-bottom: 1rem; }
+        .modal-content p { line-height: 1.6; color: var(--text-muted); }
+        .modal-content ul { text-align: left; color: var(--text-muted); margin-bottom: 2rem; }
+        .modal-content li { margin-bottom: 0.5rem; }
+
+        .eod-stats { display: flex; justify-content: space-around; margin: 2rem 0; background: #000; padding: 1rem; border: 1px solid var(--border); }
+        .eod-profit { font-size: 2rem; font-weight: bold; }
+        
+        .cat-quote { font-style: italic; color: var(--accent); margin: 1.5rem 0; font-size: 1.1rem; }
+
+        .chart-container { width: 100%; height: 150px; background: #000; border: 1px solid var(--border); margin: 1rem 0; position: relative; }
+        .chart-label { position: absolute; top: 5px; left: 5px; font-size: 0.7rem; color: var(--text-muted); }
+
     </style>
 </head>
 <body>
 
+    <div class="modal-overlay active" id="modal-instructions">
+        <div class="modal-content">
+            <h2>SYSTEM BOOT: MEOW-RKET OS</h2>
+            <p>Welcome to the trading floor. You have $1,000. Your goal is to not go broke while navigating a market driven entirely by cat logic.</p>
+            <ul>
+                <li><strong>The Clock:</strong> The market is only open for 60 seconds each "Day".</li>
+                <li><strong>The Hustle:</strong> Buy low. Sell high. Watch the ticker.</li>
+                <li><strong>The Catch:</strong> The cats run the market. Prices will swing wildly for no logical human reason.</li>
+            </ul>
+            <button class="btn-action" onclick="startGame()">INITIALIZE TRADING</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-eod">
+        <div class="modal-content" style="border-color: var(--accent); box-shadow: 0 0 20px rgba(245, 166, 35, 0.2);">
+            <h2>END OF DAY <span id="eod-day-label">1</span></h2>
+            
+            <div class="chart-container" id="chart-container">
+                <span class="chart-label">Net Worth Intraday Chart</span>
+                </div>
+
+            <div class="eod-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Daily Profit / Loss</span>
+                    <span class="eod-profit" id="eod-profit-display">$0.00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Net Worth</span>
+                    <span class="stat-value" id="eod-networth-display" style="color: var(--text-main);">$1,000.00</span>
+                </div>
+            </div>
+
+            <p class="cat-quote" id="cat-quote">"Meow."</p>
+
+            <button class="btn-action" onclick="nextDay()">RING BELL FOR DAY <span id="next-day-btn-label">2</span></button>
+        </div>
+    </div>
+
     <header>
         <div class="title-block">
             <h1>Wall Street Meow-rket</h1>
-            <p>Terminal v1.0.0 // STATUS: ONLINE</p>
+            <p>Terminal v1.0.0 // STATUS: <span id="header-status">OFFLINE</span></p>
         </div>
+        
+        <div class="time-display" id="time-display">
+            <span class="day-label">DAY <span id="day-counter">1</span></span>
+            <span class="clock" id="clock">0:60</span>
+        </div>
+
         <div class="portfolio-summary">
             <div class="stat-box">
                 <span class="stat-label">Available Cash</span>
@@ -258,7 +232,7 @@
         <div class="panel">
             <div class="panel-header">
                 <span>Live Market</span>
-                <span id="market-status" style="color: var(--up)">● OPEN</span>
+                <span id="market-status" style="color: var(--down)">● CLOSED</span>
             </div>
             <div class="market-list" id="market-list">
                 </div>
@@ -276,12 +250,12 @@
                     
                     <div class="input-group">
                         <span style="color: var(--text-muted)">QTY:</span>
-                        <input type="number" id="trade-qty" value="1" min="1">
+                        <input type="number" id="trade-qty" value="1" min="1" disabled>
                     </div>
 
                     <div class="btn-group">
-                        <button class="btn-buy" id="btn-buy">POUNCE (BUY)</button>
-                        <button class="btn-sell" id="btn-sell">DROP (SELL)</button>
+                        <button class="btn-buy" id="btn-buy" disabled>POUNCE (BUY)</button>
+                        <button class="btn-sell" id="btn-sell" disabled>DROP (SELL)</button>
                     </div>
                 </div>
             </div>
@@ -297,21 +271,23 @@
     <div class="news-ticker-container">
         <div class="ticker-label">BREAKING</div>
         <div class="scrolling-news" id="news-ticker">
-            NEW RESEARCH SHOWS DOGS STILL BAD INVESTMENT ... $TUNA QUOTAS REDUCED BY 20% GLOBALLY ... RED DOT REMAINS UNCATCHABLE, $LSR SHARES PLUMMET ... CARDBOARD BOX SHORTAGE EXPECTED THIS WINTER ... 
+            NEW RESEARCH SHOWS DOGS STILL BAD INVESTMENT ... $TUNA QUOTAS REDUCED BY 20% GLOBALLY ... RED DOT REMAINS UNCATCHABLE, $LSR SHARES PLUMMET ... CARDBOARD BOX SHORTAGE EXPECTED THIS WINTER ... LOCAL ORANGE CAT HAS ONLY ONE BRAIN CELL, BECOMES CEO ...
         </div>
     </div>
 
     <script>
-        // --- GAME DATA & STATE ---
-        const gameState = {
+        // --- GAME STATE ---
+        const DAY_LENGTH_SEC = 60;
+        
+        let gameState = {
+            day: 1,
+            timeLeft: DAY_LENGTH_SEC,
             cash: 1000.00,
             selectedTicker: 'TUNA',
-            holdings: {
-                TUNA: 0,
-                NIP: 0,
-                BXS: 0,
-                LSR: 0
-            }
+            isMarketOpen: false,
+            startOfDayNetWorth: 1000.00,
+            dailyNetWorthHistory: [], // Used for the EOD chart
+            holdings: { TUNA: 0, NIP: 0, BXS: 0, LSR: 0 }
         };
 
         const market = {
@@ -320,6 +296,9 @@
             BXS:  { name: "Cardboard Box Co.", price: 12.50, history: [12.50], volatility: 0.03, trend: 0 },
             LSR:  { name: "Red Dot Tech", price: 210.00, history: [210.00], volatility: 0.12, trend: 0 }
         };
+
+        let timerInterval;
+        let marketTickInterval;
 
         // DOM Elements
         const cashDisplay = document.getElementById('cash-display');
@@ -331,36 +310,196 @@
         const qtyInput = document.getElementById('trade-qty');
         const btnBuy = document.getElementById('btn-buy');
         const btnSell = document.getElementById('btn-sell');
+        
+        const clockDisplay = document.getElementById('clock');
+        const timeContainer = document.getElementById('time-display');
+        const marketStatus = document.getElementById('market-status');
+        const headerStatus = document.getElementById('header-status');
 
-        // --- CORE LOGIC ---
+        // --- CORE GAMEPLAY LOGIC ---
 
         function formatMoney(amount) {
             return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
         }
 
-        // The Engine: Updates prices based on a random walk
+        function calculateNetWorth() {
+            let totalValue = gameState.cash;
+            for (let ticker in gameState.holdings) {
+                totalValue += (gameState.holdings[ticker] * market[ticker].price);
+            }
+            return totalValue;
+        }
+
         function tickMarket() {
+            if (!gameState.isMarketOpen) return;
+
             for (let ticker in market) {
                 let stock = market[ticker];
                 let oldPrice = stock.price;
                 
-                // Random walk logic
                 let changePercent = (Math.random() * stock.volatility * 2) - stock.volatility; 
-                
-                // Add trend momentum (we will use this for chaotic events later)
                 changePercent += stock.trend; 
 
                 let newPrice = oldPrice + (oldPrice * changePercent);
-                if (newPrice < 0.01) newPrice = 0.01; // Can't go below 1 cent
+                if (newPrice < 0.01) newPrice = 0.01; 
 
                 stock.history.push(oldPrice);
-                if (stock.history.length > 50) stock.history.shift(); // Keep history manageable
+                if (stock.history.length > 50) stock.history.shift(); 
                 
                 stock.price = newPrice;
             }
+            
+            // Record portfolio performance for the EOD chart
+            gameState.dailyNetWorthHistory.push(calculateNetWorth());
+
             renderMarket();
             renderPortfolio();
         }
+
+        // --- TIMER & DAY LOGIC ---
+
+        function startGame() {
+            document.getElementById('modal-instructions').classList.remove('active');
+            startDay();
+        }
+
+        function startDay() {
+            gameState.timeLeft = DAY_LENGTH_SEC;
+            gameState.isMarketOpen = true;
+            gameState.dailyNetWorthHistory = [calculateNetWorth()];
+            gameState.startOfDayNetWorth = calculateNetWorth();
+            
+            qtyInput.disabled = false;
+            marketStatus.innerText = "● OPEN";
+            marketStatus.style.color = "var(--up)";
+            headerStatus.innerText = "ONLINE";
+
+            updateClockUI();
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateClockUI();
+                
+                if (gameState.timeLeft <= 0) {
+                    endDay();
+                }
+            }, 1000);
+
+            clearInterval(marketTickInterval);
+            marketTickInterval = setInterval(tickMarket, 2000);
+            
+            renderMarket();
+        }
+
+        function updateClockUI() {
+            let secs = gameState.timeLeft;
+            clockDisplay.innerText = `0:${secs < 10 ? '0' + secs : secs}`;
+            
+            if (secs <= 10 && secs > 0) {
+                timeContainer.classList.add('warning');
+            } else {
+                timeContainer.classList.remove('warning');
+            }
+        }
+
+        function endDay() {
+            clearInterval(timerInterval);
+            clearInterval(marketTickInterval);
+            gameState.isMarketOpen = false;
+            
+            qtyInput.disabled = true;
+            btnBuy.disabled = true;
+            btnSell.disabled = true;
+            marketStatus.innerText = "● CLOSED";
+            marketStatus.style.color = "var(--down)";
+
+            // Calculate EOD Stats
+            let currentNetWorth = calculateNetWorth();
+            let profit = currentNetWorth - gameState.startOfDayNetWorth;
+            
+            document.getElementById('eod-day-label').innerText = gameState.day;
+            document.getElementById('eod-networth-display').innerText = formatMoney(currentNetWorth);
+            
+            let profitEl = document.getElementById('eod-profit-display');
+            profitEl.innerText = (profit >= 0 ? '+' : '') + formatMoney(profit);
+            profitEl.style.color = profit >= 0 ? "var(--up)" : "var(--down)";
+
+            // Generate SVG Chart
+            document.getElementById('chart-container').innerHTML = `<span class="chart-label">Net Worth Intraday Chart</span>` + generateChartSVG(gameState.dailyNetWorthHistory);
+
+            // Select Cat Quote
+            document.getElementById('cat-quote').innerText = getCatQuote(profit);
+
+            document.getElementById('next-day-btn-label').innerText = gameState.day + 1;
+            document.getElementById('modal-eod').classList.add('active');
+        }
+
+        function nextDay() {
+            gameState.day++;
+            document.getElementById('day-counter').innerText = gameState.day;
+            document.getElementById('modal-eod').classList.remove('active');
+            startDay();
+        }
+
+        function generateChartSVG(data) {
+            if (data.length < 2) return '';
+            let min = Math.min(...data);
+            let max = Math.max(...data);
+            
+            // Add padding to min/max so lines don't hit the absolute edges
+            let padding = (max - min) * 0.1 || max * 0.05; 
+            min -= padding; max += padding;
+
+            let width = 1000; // Using an arbitrary large viewbox width for smooth rendering
+            let height = 150;
+            
+            let points = data.map((val, i) => {
+                let x = (i / (data.length - 1)) * width;
+                let y = height - ((val - min) / (max - min)) * height;
+                return `${x},${y}`;
+            }).join(' ');
+
+            let color = data[data.length-1] >= data[0] ? 'var(--up)' : 'var(--down)';
+
+            return `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+                        <polyline fill="none" stroke="${color}" stroke-width="3" points="${points}" />
+                    </svg>`;
+        }
+
+        function getCatQuote(profit) {
+            const quotesWinHuge = [
+                '"We own the cardboard box factory now. Tremble before us."',
+                '"I knocked your portfolio off the table, and it landed on a pile of money. Meow."',
+                '"Cancel the dry kibble. Tonight, we dine on the finest Norwegian Salmon."'
+            ];
+            const quotesWinSmall = [
+                '"Caught the laser! Good job, human."',
+                '"A minor success. I will allow you to scratch behind my ears for exactly 4 seconds."',
+                '"Not bad. I was going to bite your ankle, but I will spare you."'
+            ];
+            const quotesNeutral = [
+                '"The red dot eludes us, but we live to chase it another day."',
+                '"I slept through the trading day. Apparently, so did you."'
+            ];
+            const quotesLossSmall = [
+                '"I stepped on the keyboard and accidentally sold your shares. Oops."',
+                '"This portfolio is as disappointing as the bottom of an empty food bowl."',
+                '"Why did you buy the dip? The dip was made of citrus. I hate citrus."'
+            ];
+            const quotesLossHuge = [
+                '"Instructions unclear, bought the dip, it kept dipping. Need wet food."',
+                '"I am going to throw up on the rug to reflect my feelings on your trading strategy."',
+                '"You are a terrible provider. I am packing my favorite toy mouse and leaving."'
+            ];
+
+            if (profit > 500) return quotesWinHuge[Math.floor(Math.random() * quotesWinHuge.length)];
+            if (profit > 10)  return quotesWinSmall[Math.floor(Math.random() * quotesWinSmall.length)];
+            if (profit > -10) return quotesNeutral[Math.floor(Math.random() * quotesNeutral.length)];
+            if (profit > -500) return quotesLossSmall[Math.floor(Math.random() * quotesLossSmall.length)];
+            return quotesLossHuge[Math.floor(Math.random() * quotesLossHuge.length)];
+        }
+
 
         // --- UI RENDERING ---
 
@@ -376,7 +515,7 @@
 
                 let row = document.createElement('div');
                 row.className = `stock-row ${gameState.selectedTicker === ticker ? 'active' : ''}`;
-                row.onclick = () => selectStock(ticker);
+                row.onclick = () => { if (gameState.isMarketOpen) selectStock(ticker); };
 
                 row.innerHTML = `
                     <div>
@@ -390,27 +529,26 @@
                 marketList.appendChild(row);
             }
 
-            // Update Trading Desk display
             let currentStock = market[gameState.selectedTicker];
             tradeTickerDisplay.innerText = `$${gameState.selectedTicker}`;
             tradePriceDisplay.innerText = formatMoney(currentStock.price);
             
-            // Re-evaluate button states
             validateTradeButtons();
         }
 
         function renderPortfolio() {
             cashDisplay.innerText = formatMoney(gameState.cash);
             
-            let totalValue = gameState.cash;
+            let totalValue = calculateNetWorth();
             holdingsList.innerHTML = '';
 
+            let hasHoldings = false;
             for (let ticker in gameState.holdings) {
                 let qty = gameState.holdings[ticker];
                 let value = qty * market[ticker].price;
-                totalValue += value;
 
                 if (qty > 0) {
+                    hasHoldings = true;
                     holdingsList.innerHTML += `
                         <div class="holding-item">
                             <span><strong>$${ticker}</strong> x ${qty}</span>
@@ -420,10 +558,7 @@
                 }
             }
 
-            if (holdingsList.innerHTML === '') {
-                holdingsList.innerHTML = '<span style="color: var(--text-muted)">No assets held.</span>';
-            }
-
+            if (!hasHoldings) { holdingsList.innerHTML = '<span style="color: var(--text-muted)">No assets held.</span>'; }
             networthDisplay.innerText = formatMoney(totalValue);
         }
 
@@ -435,6 +570,7 @@
         }
 
         function validateTradeButtons() {
+            if (!gameState.isMarketOpen) return;
             let qty = parseInt(qtyInput.value) || 0;
             let currentPrice = market[gameState.selectedTicker].price;
             let cost = qty * currentPrice;
@@ -446,6 +582,7 @@
         qtyInput.addEventListener('input', validateTradeButtons);
 
         btnBuy.addEventListener('click', () => {
+            if (!gameState.isMarketOpen) return;
             let qty = parseInt(qtyInput.value);
             let currentPrice = market[gameState.selectedTicker].price;
             let cost = qty * currentPrice;
@@ -454,7 +591,7 @@
                 gameState.cash -= cost;
                 gameState.holdings[gameState.selectedTicker] += qty;
                 document.querySelector('.trading-desk').classList.remove('flash-buy', 'flash-sell');
-                void document.querySelector('.trading-desk').offsetWidth; // Trigger reflow for animation
+                void document.querySelector('.trading-desk').offsetWidth; 
                 document.querySelector('.trading-desk').classList.add('flash-buy');
                 
                 renderPortfolio();
@@ -463,6 +600,7 @@
         });
 
         btnSell.addEventListener('click', () => {
+            if (!gameState.isMarketOpen) return;
             let qty = parseInt(qtyInput.value);
             let currentPrice = market[gameState.selectedTicker].price;
             let revenue = qty * currentPrice;
@@ -479,10 +617,9 @@
             }
         });
 
-        // Initialize Game Loop
+        // Setup Init state (Market closed)
         renderMarket();
         renderPortfolio();
-        setInterval(tickMarket, 2500); // Market updates every 2.5 seconds
 
     </script>
 </body>
