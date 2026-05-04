@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Street Meow-rket Terminal</title>
+    <style>
+        /* Bloomberg Terminal Aesthetic */
+        :root {
+            --bg-color: #050505;
+            --surface: #111111;
+            --border: #333333;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --up: #00ff00;
+            --down: #ff0033;
+            --accent: #f5a623;
+            --panel-bg: #1a1a1a;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 1rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header / Portfolio Summary */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .title-block p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .portfolio-summary {
+            display: flex;
+            gap: 2rem;
+            background-color: var(--panel-bg);
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; }
+
+        /* Main Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background-color: var(--panel-bg);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--accent);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Market Watch (Left Side) */
+        .market-list {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .stock-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .stock-row:hover, .stock-row.active {
+            background-color: #222;
+        }
+
+        .ticker { font-size: 1.2rem; font-weight: bold; }
+        .company-name { font-size: 0.8rem; color: var(--text-muted); display: block; }
+        .price { font-size: 1.2rem; text-align: right; font-weight: bold; transition: color 0.3s; }
+        .change { text-align: right; font-weight: bold; }
+
+        .price-up { color: var(--up); text-shadow: 0 0 5px rgba(0,255,0,0.5); }
+        .price-down { color: var(--down); text-shadow: 0 0 5px rgba(255,0,51,0.5); }
+
+        /* Trading Desk & Inventory (Right Side) */
+        .trading-desk { padding: 1rem; border-bottom: 1px solid var(--border); }
+        .inventory { flex-grow: 1; padding: 1rem; overflow-y: auto; }
+
+        .trade-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .selected-stock-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000;
+            padding: 1rem;
+            border: 1px dashed var(--border);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            background: #000;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            width: 100%;
+            font-family: 'Courier New', Courier, monospace;
+            outline: none;
+        }
+        input[type="number"]:focus { border-color: var(--accent); }
+
+        .btn-group { display: flex; gap: 0.5rem; }
+        button {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .btn-buy { background-color: var(--up); color: #000; }
+        .btn-sell { background-color: var(--down); color: #fff; }
+
+        .holdings-list { margin-top: 1rem; }
+        .holding-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        /* News Ticker (Bottom) */
+        .news-ticker-container {
+            margin-top: 1rem;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .ticker-label {
+            background: var(--accent);
+            color: #000;
+            padding: 0 0.5rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            z-index: 2;
+        }
+        .scrolling-news {
+            display: inline-block;
+            animation: scrollNews 25s linear infinite;
+            color: var(--text-muted);
+        }
+        @keyframes scrollNews {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Visual Flash Effect for UI Updates */
+        .flash-buy { animation: flashGreen 0.5s; }
+        .flash-sell { animation: flashRed 0.5s; }
+        @keyframes flashGreen { 0% { background-color: rgba(0,255,0,0.3); } 100% { background-color: transparent; } }
+        @keyframes flashRed { 0% { background-color: rgba(255,0,51,0.3); } 100% { background-color: transparent; } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-block">
+            <h1>Wall Street Meow-rket</h1>
+            <p>Terminal v1.0.0 // STATUS: ONLINE</p>
+        </div>
+        <div class="portfolio-summary">
+            <div class="stat-box">
+                <span class="stat-label">Available Cash</span>
+                <span class="stat-value" id="cash-display">$1,000.00</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Total Net Worth</span>
+                <span class="stat-value" id="networth-display">$1,000.00</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard">
+        <div class="panel">
+            <div class="panel-header">
+                <span>Live Market</span>
+                <span id="market-status" style="color: var(--up)">● OPEN</span>
+            </div>
+            <div class="market-list" id="market-list">
+                </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">Trading Desk</div>
+            
+            <div class="trading-desk">
+                <div class="trade-controls">
+                    <div class="selected-stock-display">
+                        <span id="trade-ticker" style="font-size: 1.5rem; font-weight: bold;">$TUNA</span>
+                        <span id="trade-price" style="font-size: 1.5rem;">$0.00</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span style="color: var(--text-muted)">QTY:</span>
+                        <input type="number" id="trade-qty" value="1" min="1">
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-buy" id="btn-buy">POUNCE (BUY)</button>
+                        <button class="btn-sell" id="btn-sell">DROP (SELL)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-header" style="border-top: 1px solid var(--border);">Your Inventory</div>
+            <div class="inventory">
+                <div class="holdings-list" id="holdings-list">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="news-ticker-container">
+        <div class="ticker-label">BREAKING</div>
+        <div class="scrolling-news" id="news-ticker">
+            NEW RESEARCH SHOWS DOGS STILL BAD INVESTMENT ... $TUNA QUOTAS REDUCED BY 20% GLOBALLY ... RED DOT REMAINS UNCATCHABLE, $LSR SHARES PLUMMET ... CARDBOARD BOX SHORTAGE EXPECTED THIS WINTER ... 
+        </div>
+    </div>
+
+    <script>
+        // --- GAME DATA & STATE ---
+        const gameState = {
+            cash: 1000.00,
+            selectedTicker: 'TUNA',
+            holdings: {
+                TUNA: 0,
+                NIP: 0,
+                BXS: 0,
+                LSR: 0
+            }
+        };
+
+        const market = {
+            TUNA: { name: "Bluefin Tuna Corp", price: 150.00, history: [150.00], volatility: 0.05, trend: 0 },
+            NIP:  { name: "High Grade Catnip", price: 45.00, history: [45.00], volatility: 0.08, trend: 0 },
+            BXS:  { name: "Cardboard Box Co.", price: 12.50, history: [12.50], volatility: 0.03, trend: 0 },
+            LSR:  { name: "Red Dot Tech", price: 210.00, history: [210.00], volatility: 0.12, trend: 0 }
+        };
+
+        // DOM Elements
+        const cashDisplay = document.getElementById('cash-display');
+        const networthDisplay = document.getElementById('networth-display');
+        const marketList = document.getElementById('market-list');
+        const holdingsList = document.getElementById('holdings-list');
+        const tradeTickerDisplay = document.getElementById('trade-ticker');
+        const tradePriceDisplay = document.getElementById('trade-price');
+        const qtyInput = document.getElementById('trade-qty');
+        const btnBuy = document.getElementById('btn-buy');
+        const btnSell = document.getElementById('btn-sell');
+
+        // --- CORE LOGIC ---
+
+        function formatMoney(amount) {
+            return '$' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // The Engine: Updates prices based on a random walk
+        function tickMarket() {
+            for (let ticker in market) {
+                let stock = market[ticker];
+                let oldPrice = stock.price;
+                
+                // Random walk logic
+                let changePercent = (Math.random() * stock.volatility * 2) - stock.volatility; 
+                
+                // Add trend momentum (we will use this for chaotic events later)
+                changePercent += stock.trend; 
+
+                let newPrice = oldPrice + (oldPrice * changePercent);
+                if (newPrice < 0.01) newPrice = 0.01; // Can't go below 1 cent
+
+                stock.history.push(oldPrice);
+                if (stock.history.length > 50) stock.history.shift(); // Keep history manageable
+                
+                stock.price = newPrice;
+            }
+            renderMarket();
+            renderPortfolio();
+        }
+
+        // --- UI RENDERING ---
+
+        function renderMarket() {
+            marketList.innerHTML = '';
+            for (let ticker in market) {
+                let stock = market[ticker];
+                let oldPrice = stock.history[stock.history.length - 1];
+                let diff = stock.price - oldPrice;
+                let isUp = diff >= 0;
+                let colorClass = isUp ? 'price-up' : 'price-down';
+                let sign = isUp ? '+' : '';
+
+                let row = document.createElement('div');
+                row.className = `stock-row ${gameState.selectedTicker === ticker ? 'active' : ''}`;
+                row.onclick = () => selectStock(ticker);
+
+                row.innerHTML = `
+                    <div>
+                        <span class="ticker">$${ticker}</span>
+                        <span class="company-name">${stock.name}</span>
+                    </div>
+                    <div></div>
+                    <div class="price ${colorClass}">${formatMoney(stock.price)}</div>
+                    <div class="change ${colorClass}">${sign}${formatMoney(diff)}</div>
+                `;
+                marketList.appendChild(row);
+            }
+
+            // Update Trading Desk display
+            let currentStock = market[gameState.selectedTicker];
+            tradeTickerDisplay.innerText = `$${gameState.selectedTicker}`;
+            tradePriceDisplay.innerText = formatMoney(currentStock.price);
+            
+            // Re-evaluate button states
+            validateTradeButtons();
+        }
+
+        function renderPortfolio() {
+            cashDisplay.innerText = formatMoney(gameState.cash);
+            
+            let totalValue = gameState.cash;
+            holdingsList.innerHTML = '';
+
+            for (let ticker in gameState.holdings) {
+                let qty = gameState.holdings[ticker];
+                let value = qty * market[ticker].price;
+                totalValue += value;
+
+                if (qty > 0) {
+                    holdingsList.innerHTML += `
+                        <div class="holding-item">
+                            <span><strong>$${ticker}</strong> x ${qty}</span>
+                            <span>${formatMoney(value)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            if (holdingsList.innerHTML === '') {
+                holdingsList.innerHTML = '<span style="color: var(--text-muted)">No assets held.</span>';
+            }
+
+            networthDisplay.innerText = formatMoney(totalValue);
+        }
+
+        // --- INTERACTION ---
+
+        function selectStock(ticker) {
+            gameState.selectedTicker = ticker;
+            renderMarket();
+        }
+
+        function validateTradeButtons() {
+            let qty = parseInt(qtyInput.value) || 0;
+            let currentPrice = market[gameState.selectedTicker].price;
+            let cost = qty * currentPrice;
+
+            btnBuy.disabled = qty <= 0 || cost > gameState.cash;
+            btnSell.disabled = qty <= 0 || gameState.holdings[gameState.selectedTicker] < qty;
+        }
+
+        qtyInput.addEventListener('input', validateTradeButtons);
+
+        btnBuy.addEventListener('click', () => {
+            let qty = parseInt(qtyInput.value);
+            let currentPrice = market[gameState.selectedTicker].price;
+            let cost = qty * currentPrice;
+
+            if (cost <= gameState.cash) {
+                gameState.cash -= cost;
+                gameState.holdings[gameState.selectedTicker] += qty;
+                document.querySelector('.trading-desk').classList.remove('flash-buy', 'flash-sell');
+                void document.querySelector('.trading-desk').offsetWidth; // Trigger reflow for animation
+                document.querySelector('.trading-desk').classList.add('flash-buy');
+                
+                renderPortfolio();
+                validateTradeButtons();
+            }
+        });
+
+        btnSell.addEventListener('click', () => {
+            let qty = parseInt(qtyInput.value);
+            let currentPrice = market[gameState.selectedTicker].price;
+            let revenue = qty * currentPrice;
+
+            if (gameState.holdings[gameState.selectedTicker] >= qty) {
+                gameState.cash += revenue;
+                gameState.holdings[gameState.selectedTicker] -= qty;
+                document.querySelector('.trading-desk').classList.remove('flash-buy', 'flash-sell');
+                void document.querySelector('.trading-desk').offsetWidth;
+                document.querySelector('.trading-desk').classList.add('flash-sell');
+
+                renderPortfolio();
+                validateTradeButtons();
+            }
+        });
+
+        // Initialize Game Loop
+        renderMarket();
+        renderPortfolio();
+        setInterval(tickMarket, 2500); // Market updates every 2.5 seconds
+
+    </script>
+</body>
+</html>
