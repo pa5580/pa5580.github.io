@@ -29,7 +29,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth; /* Enables smooth scrolling for navigation links */
+            scroll-behavior: smooth;
         }
 
         body {
@@ -158,7 +158,7 @@
             box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
         }
 
-        /* Navigation Bar (Always Visible, Sticky Top) */
+        /* Navigation Bar */
         nav {
             position: fixed;
             top: 0;
@@ -213,11 +213,7 @@
             color: var(--accent-blue);
         }
 
-        /* * ==========================================
-         * PREMIUM STATIC HERO SECTION
-         * ==========================================
-         */
-        
+        /* Hero Section */
         .hero {
             height: 100vh;
             display: flex;
@@ -228,10 +224,9 @@
             background: linear-gradient(135deg, var(--navy), var(--navy-light));
             color: var(--white);
             overflow: hidden;
-            padding-top: 60px; /* Offset for the navbar */
+            padding-top: 60px;
         }
 
-        /* Analytical Data Grid Pattern */
         .hero::before {
             content: '';
             position: absolute;
@@ -244,7 +239,6 @@
             z-index: 1;
         }
 
-        /* Atmospheric Glowing Orbs */
         .hero-glow-1, .hero-glow-2 {
             position: absolute;
             border-radius: 50%;
@@ -289,7 +283,7 @@
         .profile-img {
             width: 180px;
             height: 180px;
-            border-radius: 35%; /* Aesthetic Squircle */
+            border-radius: 35%; 
             object-fit: cover;
             border: 4px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -340,19 +334,13 @@
             align-items: center;
         }
 
-        .about-text p {
-            margin-bottom: 1.5rem;
-        }
-
         .about-stats {
             background: var(--soft-gray);
             padding: 3rem;
             border-radius: 20px;
             border: 1px solid var(--soft-gray-dark);
-            position: relative;
         }
 
-        /* Bullet List Formatting */
         .bullet-list {
             list-style: none;
             padding-left: 0;
@@ -399,8 +387,6 @@
             border-left: 6px solid var(--accent-blue);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
         .exp-card:hover {
@@ -437,7 +423,6 @@
             padding-left: 1.5rem;
             margin-bottom: 0.75rem;
             color: var(--text-secondary);
-            font-size: 1rem;
         }
 
         .exp-bullets li::before {
@@ -478,9 +463,73 @@
             color: var(--navy);
             font-size: 1.25rem;
             margin-bottom: 1.5rem;
+        }
+
+        /* Projects Section */
+        .projects {
+            background-color: var(--soft-gray);
+        }
+
+        .project-card {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--soft-gray-dark);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .project-content {
+            flex: 2;
+            z-index: 2;
+        }
+
+        .project-content h3 {
+            font-size: 2rem;
+            color: var(--navy);
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 10px;
+        }
+
+        .project-desc {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .project-use-cases li {
+            margin-bottom: 0.5rem;
+        }
+
+        .chibi-cats-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            font-size: 5rem;
+            opacity: 0.9;
+            text-align: center;
+            animation: floatCat 3s ease-in-out infinite alternate;
+            user-select: none;
+            padding: 2rem;
+            background: var(--highlight-bg);
+            border-radius: 20px;
+        }
+
+        @keyframes floatCat {
+            0% { transform: translateY(0) rotate(-3deg); }
+            100% { transform: translateY(-15px) rotate(3deg); }
         }
 
         /* Contact Section */
@@ -491,14 +540,8 @@
             padding: 6rem 2rem;
         }
 
-        .contact h2 {
-            color: var(--white);
-        }
-
-        .contact h2::after {
-            left: 50%;
-            transform: translateX(-50%);
-        }
+        .contact h2 { color: var(--white); }
+        .contact h2::after { left: 50%; transform: translateX(-50%); }
 
         .contact-links {
             display: flex;
@@ -530,6 +573,10 @@
             .about-grid { grid-template-columns: 1fr; }
             .skills-grid { grid-template-columns: repeat(2, 1fr); }
             .hero h1 { font-size: 3.5rem; }
+            .project-card { flex-direction: column; text-align: center; }
+            .bullet-list li::before { left: 0; }
+            .project-content h3 { justify-content: center; }
+            .chibi-cats-container { display: flex; justify-content: center; width: 100%; font-size: 4rem; }
         }
 
         @media (max-width: 768px) {
@@ -553,7 +600,7 @@
             <a href="#about">About</a>
             <a href="#experience">Experience</a>
             <a href="#skills">Skills</a>
-            <a href="#contact">Contact</a>
+            <a href="#projects">Projects</a> <a href="#contact">Contact</a>
         </div>
     </nav>
 
@@ -573,7 +620,7 @@
             </div>
             <div class="hero-buttons">
                 <a href="#experience" class="btn">View My Work</a>
-                <a href="thezoomiesnotepad.html" target="_blank" class="btn-secondary">Try My App</a>
+                <a href="thezoomiesnotepad" target="_blank" class="btn-secondary">Try My App</a>
             </div>
         </div>
     </header>
@@ -602,7 +649,6 @@
             <h2>Professional Experience</h2>
             
             <div class="experience-grid">
-
                 <div class="exp-card">
                     <div class="exp-header">
                         <div>
@@ -662,7 +708,6 @@
                         <li>Secured an upcoming audit internship at a Big Four accounting firm. Preparing to apply <span class="metric-highlight">advanced accounting principles</span>, data analytics, and rigorous financial verification techniques to support enterprise audit operations.</li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </section>
@@ -705,6 +750,36 @@
                     </ul>
                 </div>
 
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2>Featured Projects</h2>
+            <div class="project-card">
+                <div class="project-content">
+                    <h3>The Zoomies Notepad 🐾</h3>
+                    <p class="project-desc">A gamified, stress-testing web application built to increase typing velocity and cure writer's block through forced engagement and maximum chaos.</p>
+                    
+                    <h4 style="margin-bottom: 0.5rem; color: var(--navy);">Primary Use Cases:</h4>
+                    <ul class="bullet-list project-use-cases">
+                        <li><strong>Curing Writer's Block:</strong> The app demands constant text input, forcing users to write past creative blocks to keep the digital feline appeased.</li>
+                        <li><strong>Typing Velocity Training:</strong> Gamified mechanics, streaks, and randomized UI disruptions push you to type faster under pressure.</li>
+                        <li><strong>Stress Relief:</strong> A highly interactive, humorous break from traditional, rigid productivity and corporate tools.</li>
+                    </ul>
+                    
+                    <div style="margin-top: 2rem;">
+                        <a href="thezoomiesnotepad" target="_blank" class="btn">Launch The App 🚀</a>
+                    </div>
+                </div>
+                
+                <div class="chibi-cats-container">
+                    <div class="chibi-cat">🐈</div>
+                    <div class="chibi-cat">🐈‍⬛</div>
+                    <div class="chibi-cat">😸</div>
+                    <div class="chibi-cat">🐾</div>
+                </div>
             </div>
         </div>
     </section>
