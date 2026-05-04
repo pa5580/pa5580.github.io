@@ -1,26 +1,726 @@
-<div id="typing-interface">
-    <span class="prompt-arrow">></span>
-    <span id="current-input"></span><span class="cursor">_</span>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Scratch: Typing Defense</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
 
-<div class="screen" id="start-screen">
-    <h1 class="title">CYBER-SCRATCH</h1>
-    <p class="subtitle">Defend the firewall. Type the malicious strings to destroy them...</p>
-    <div style="display: flex; gap: 20px; margin-top: 20px;">
-        <button class="btn" id="btn-start">Initialize Defense</button>
-        <button class="btn" id="btn-instructions">Read Manual</button>
-    </div>
-</div>
+        :root {
+            --bg: #050505;
+            --neon-green: #0f0;
+            --neon-red: #f00;
+            --neon-blue: #0ff;
+            --neon-purple: #f0f;
+            --text-color: #e0e0e0;
+        }
 
-<div class="screen hidden" id="instructions-modal">
-    <div class="modal-content">
-        <h2 style="color: var(--neon-green); margin-top: 0; text-shadow: 0 0 10px var(--neon-green);">SYSTEM PROTOCOLS</h2>
-        <ul>
-            <li><strong>DEFEND:</strong> Type the falling malicious strings to destroy them.</li>
-            <li><strong>MULTIPLY:</strong> Typing perfectly without typos builds your combo multiplier. A typo breaks it instantly!</li>
-            <li><strong>ADAPT:</strong> Beware of feline interference. The cat will swat words, causing them to bounce, and occasionally block your firewall view.</li>
-            <li><strong>SURVIVE:</strong> If a string hits the bottom, your firewall loses integrity. At 0%, the system falls.</li>
-        </ul>
-        <button class="btn" id="btn-close-instructions" style="margin-top: 20px;">Acknowledge</button>
+        * {
+            box-sizing: border-box;
+            font-family: 'Fira Code', monospace;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--neon-green);
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Scanline Overlay */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* --- UI HEADERS --- */
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(0, 255, 0, 0.1);
+            border-bottom: 2px solid var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            z-index: 10;
+        }
+
+        .hud-stat {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .hud-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .hud-value { font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 5px var(--neon-green); }
+
+        .combo-text { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+        .wave-text { color: var(--neon-purple); text-shadow: 0 0 5px var(--neon-purple); }
+
+        /* --- GAME BOARD --- */
+        #game-board {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+            text-shadow: 0 0 5px var(--text-color);
+            padding: 0.2rem 0.5rem;
+            white-space: nowrap;
+            will-change: transform;
+        }
+
+        .word.active {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px dashed var(--neon-blue);
+        }
+
+        .word .typed {
+            color: var(--bg);
+            background-color: var(--neon-green);
+            text-shadow: none;
+        }
+
+        .word.bouncing {
+            color: var(--neon-purple);
+            text-shadow: 0 0 8px var(--neon-purple);
+        }
+
+        /* --- CAT SABOTAGES --- */
+        .cat-paw {
+            position: absolute;
+            font-size: 100px;
+            top: 30%;
+            left: -150px;
+            z-index: 50;
+            filter: drop-shadow(0 0 20px var(--neon-red));
+        }
+
+        .cat-blocker {
+            position: absolute;
+            bottom: -300px; /* Hidden initially */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 250px;
+            z-index: 90;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 0 30px #000;
+        }
+        .cat-blocker.active { bottom: -40px; }
+
+        /* --- TYPING INTERFACE --- */
+        #typing-interface {
+            position: absolute;
+            bottom: 40px; /* Sits just above the firewall */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            color: var(--neon-blue);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 10px 30px;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            border-radius: 5px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            min-width: 300px;
+            justify-content: flex-start;
+        }
+        .prompt-arrow { color: var(--neon-green); margin-right: 15px; }
+        .cursor { animation: blink 1s infinite; margin-left: 2px;}
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- FIREWALL (HP BAR) --- */
+        #firewall-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background: #222;
+            border-top: 2px solid #555;
+            z-index: 5;
+        }
+        
+        #firewall-hp {
+            height: 100%;
+            width: 100%;
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .firewall-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: -25px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* --- SCREENS & MODALS --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden { display: none !important; }
+
+        .title {
+            font-size: 4rem;
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        .subtitle { color: var(--text-color); margin-bottom: 2rem; text-align: center; max-width: 600px;}
+        
+        .btn {
+            background: transparent;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0,255,0,0.2);
+        }
+
+        .btn:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .game-over-title { color: var(--neon-red); text-shadow: 0 0 20px var(--neon-red); }
+        .game-over-btn { border-color: var(--neon-red); color: var(--neon-red); }
+        .game-over-btn:hover { background: var(--neon-red); color: #000; box-shadow: 0 0 20px var(--neon-red); }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 2px solid var(--neon-green);
+            padding: 2.5rem;
+            max-width: 600px;
+            color: var(--text-color);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            text-align: center;
+        }
+        
+        .modal-content ul {
+            text-align: left;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            list-style-type: square;
+            color: var(--neon-blue);
+        }
+        
+        .modal-content li strong { color: var(--neon-green); }
+
+        /* Effects */
+        .shake { animation: screenShake 0.3s; }
+        @keyframes screenShake {
+            0% { transform: translate(0,0); }
+            20% { transform: translate(-10px, 5px); }
+            40% { transform: translate(10px, -5px); }
+            60% { transform: translate(-10px, -5px); }
+            80% { transform: translate(10px, 5px); }
+            100% { transform: translate(0,0); }
+        }
+
+        .error-flash { animation: errorFlash 0.2s; }
+        @keyframes errorFlash {
+            0% { background-color: rgba(255,0,0,0.2); }
+            100% { background-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hud">
+        <div class="hud-stat">
+            <span class="hud-label">Score</span>
+            <span class="hud-value" id="ui-score">0</span>
+        </div>
+        <div class="hud-stat">
+            <span class="hud-label">Multiplier</span>
+            <span class="hud-value combo-text" id="ui-combo">x1</span>
+        </div>
+        <div class="hud-stat">
+            <span class="hud-label">Wave</span>
+            <span class="hud-value wave-text" id="ui-wave">1</span>
+        </div>
     </div>
-</div>
+
+    <div id="game-board">
+        <div class="cat-blocker" id="cat-blocker">🐈</div>
+    </div>
+
+    <div id="typing-interface">
+        <span class="prompt-arrow">></span>
+        <span id="current-input"></span><span class="cursor">_</span>
+    </div>
+
+    <div id="firewall-container">
+        <div class="firewall-text">FIREWALL INTEGRITY</div>
+        <div id="firewall-hp"></div>
+    </div>
+
+    <div class="screen" id="start-screen">
+        <h1 class="title">CYBER-SCRATCH</h1>
+        <p class="subtitle">Defend the firewall. Type the malicious strings to destroy them before they breach the system. <br><br>WARNING: Feline interference detected on the network. Words may bounce wildly.</p>
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <button class="btn" id="btn-start">Initialize Defense</button>
+            <button class="btn" id="btn-instructions">Read Manual</button>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="instructions-modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-green); margin-top: 0; text-shadow: 0 0 10px var(--neon-green);">SYSTEM PROTOCOLS</h2>
+            <ul>
+                <li><strong>DEFEND:</strong> Type the falling malicious strings to destroy them.</li>
+                <li><strong>MULTIPLY:</strong> Typing perfectly without typos builds your combo multiplier. A typo breaks it instantly!</li>
+                <li><strong>ADAPT:</strong> Beware of feline interference. The cat will swat words, causing them to bounce, and occasionally block your firewall view.</li>
+                <li><strong>SURVIVE:</strong> If a string hits the bottom, your firewall loses integrity. At 0%, the system falls.</li>
+            </ul>
+            <button class="btn" id="btn-close-instructions" style="margin-top: 20px;">Acknowledge</button>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="game-over-screen">
+        <h1 class="title game-over-title">BREACH DETECTED</h1>
+        <p class="subtitle">The firewall has collapsed. The cat has won.<br><br>Final Score: <span id="final-score" style="color: var(--neon-blue); font-size: 2rem;">0</span></p>
+        <button class="btn game-over-btn" id="btn-restart">Reboot System</button>
+    </div>
+
+    <script>
+        // --- GAME VOCABULARY ---
+        const vocabList = [
+            "exploit.exe", "malware", "rootkit", "trojan", "ddos", "botnet", "phishing",
+            "keylogger", "spyware", "ransomware", "payload", "worm", "backdoor", 
+            "hck_492", "sudo_rm", "packet_sniffer", "bypass", "inject", "overflow",
+            "zeroday", "crypto", "hash", "decrypt", "cipher", "bruteforce", "tcp_ip",
+            "proxy", "vpn", "firewall", "subnet", "kernel", "daemon", "shell"
+        ];
+
+        // --- GAME STATE ---
+        let state = {
+            score: 0,
+            combo: 0,
+            multiplier: 1,
+            wave: 1,
+            hp: 100,
+            words: [],
+            activeWord: null, // The word currently being typed
+            isRunning: false,
+            lastTime: 0,
+            spawnTimer: 0,
+            spawnInterval: 2000,
+            baseSpeed: 0.8,
+            boardWidth: 0,
+            boardHeight: 0
+        };
+
+        let animationFrameId;
+        let eventTimers = [];
+
+        // --- DOM ELEMENTS ---
+        const board = document.getElementById('game-board');
+        const uiScore = document.getElementById('ui-score');
+        const uiCombo = document.getElementById('ui-combo');
+        const uiWave = document.getElementById('ui-wave');
+        const uiHp = document.getElementById('firewall-hp');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const catBlocker = document.getElementById('cat-blocker');
+        const uiCurrentInput = document.getElementById('current-input');
+        const instructionsModal = document.getElementById('instructions-modal');
+
+        // --- INITIALIZATION ---
+        function init() {
+            state.boardWidth = board.clientWidth;
+            state.boardHeight = board.clientHeight;
+        }
+        window.addEventListener('resize', init);
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            
+            // Reset State
+            state.score = 0;
+            state.combo = 0;
+            state.multiplier = 1;
+            state.wave = 1;
+            state.hp = 100;
+            state.words.forEach(w => w.element.remove());
+            state.words = [];
+            state.activeWord = null;
+            state.spawnInterval = 2000;
+            state.baseSpeed = 0.8;
+            state.isRunning = true;
+            uiCurrentInput.innerText = "";
+            
+            updateHUD();
+            scheduleCatEvents();
+            
+            state.lastTime = performance.now();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            state.isRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            eventTimers.forEach(clearTimeout);
+            document.getElementById('final-score').innerText = state.score;
+            gameOverScreen.classList.remove('hidden');
+            catBlocker.classList.remove('active'); // Reset blocker
+        }
+
+        // --- CORE GAME LOOP ---
+        function gameLoop(timestamp) {
+            if (!state.isRunning) return;
+
+            const deltaTime = timestamp - state.lastTime;
+            state.lastTime = timestamp;
+
+            // Spawn mechanics
+            state.spawnTimer += deltaTime;
+            if (state.spawnTimer > state.spawnInterval) {
+                spawnWord();
+                state.spawnTimer = 0;
+            }
+
+            // Physics & Rendering
+            updateWords();
+
+            // Wave Scaling (Every 1000 points = Next Wave)
+            const expectedWave = Math.floor(state.score / 1000) + 1;
+            if (expectedWave > state.wave) {
+                state.wave = expectedWave;
+                state.baseSpeed += 0.2;
+                state.spawnInterval = Math.max(500, state.spawnInterval - 150); // Cap at 500ms
+                updateHUD();
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- WORD MANAGEMENT ---
+        function spawnWord() {
+            const text = vocabList[Math.floor(Math.random() * vocabList.length)];
+            
+            const el = document.createElement('div');
+            el.className = 'word';
+            el.innerHTML = text; // Will format with spans when typed
+            board.appendChild(el);
+
+            const x = Math.random() * (state.boardWidth - el.clientWidth);
+            const y = -30; // Start above screen
+
+            const wordObj = {
+                id: Math.random().toString(36).substr(2, 9),
+                text: text,
+                typedIndex: 0,
+                x: x,
+                y: y,
+                dx: 0, // No horizontal movement initially
+                dy: state.baseSpeed + (Math.random() * 0.5), // Slight random speed variance
+                element: el,
+                isBouncing: false
+            };
+
+            state.words.push(wordObj);
+        }
+
+        function updateWords() {
+            for (let i = state.words.length - 1; i >= 0; i--) {
+                const word = state.words[i];
+                
+                // Move
+                word.x += word.dx;
+                word.y += word.dy;
+
+                // Bounce off walls if it was swatted by the cat
+                if (word.isBouncing) {
+                    if (word.x <= 0 || word.x + word.element.clientWidth >= state.boardWidth) {
+                        word.dx *= -1; // Reverse X direction
+                        word.x = Math.max(0, Math.min(word.x, state.boardWidth - word.element.clientWidth));
+                    }
+                }
+
+                // Apply transform
+                word.element.style.transform = `translate(${word.x}px, ${word.y}px)`;
+
+                // Collision with Firewall (Bottom)
+                if (word.y + word.element.clientHeight >= state.boardHeight) {
+                    takeDamage(10);
+                    destroyWord(i, false);
+                }
+            }
+        }
+
+        function destroyWord(index, wasTyped) {
+            const word = state.words[index];
+            if (state.activeWord && state.activeWord.id === word.id) {
+                state.activeWord = null;
+                uiCurrentInput.innerText = "";
+            }
+            
+            // Visual destruction
+            if (wasTyped) {
+                word.element.style.color = "#0f0";
+                word.element.style.transform = `translate(${word.x}px, ${word.y}px) scale(1.5)`;
+                word.element.style.opacity = "0";
+            }
+            
+            setTimeout(() => {
+                if(word.element.parentNode) word.element.remove();
+            }, 100);
+            
+            state.words.splice(index, 1);
+        }
+
+        function takeDamage(amount) {
+            state.hp -= amount;
+            if (state.hp <= 0) state.hp = 0;
+            
+            // Break combo
+            state.combo = 0;
+            updateMultiplier();
+
+            // Visuals
+            updateHUD();
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 300);
+
+            if (state.hp === 0) gameOver();
+        }
+
+        // --- TYPING SYSTEM ---
+        window.addEventListener('keydown', (e) => {
+            if (!state.isRunning) return;
+            
+            // Only care about a-z, 0-9, and underscores (based on vocab list)
+            if (e.key.length !== 1 || e.ctrlKey || e.metaKey) return;
+            
+            const typedChar = e.key.toLowerCase();
+
+            // 1. If we already have an active word targeted
+            if (state.activeWord) {
+                const nextChar = state.activeWord.text[state.activeWord.typedIndex];
+                
+                if (typedChar === nextChar) {
+                    // Correct letter!
+                    state.activeWord.typedIndex++;
+                    renderActiveWord();
+                    uiCurrentInput.innerText = state.activeWord.text.substring(0, state.activeWord.typedIndex);
+
+                    if (state.activeWord.typedIndex === state.activeWord.text.length) {
+                        // Word completely typed!
+                        const wordIndex = state.words.findIndex(w => w.id === state.activeWord.id);
+                        if (wordIndex > -1) destroyWord(wordIndex, true);
+                        
+                        // Score & Combo
+                        state.score += (10 * state.multiplier);
+                        state.combo++;
+                        updateMultiplier();
+                        updateHUD();
+                        
+                        uiCurrentInput.innerText = ""; // Clear box
+                    }
+                } else {
+                    // Wrong letter!
+                    document.body.classList.add('error-flash');
+                    setTimeout(() => document.body.classList.remove('error-flash'), 200);
+                    state.combo = 0;
+                    updateMultiplier();
+                    updateHUD();
+                    
+                    // Clear box to force re-targeting after a mistake
+                    uiCurrentInput.innerText = state.activeWord.text.substring(0, state.activeWord.typedIndex); 
+                }
+                return; // Done processing
+            }
+
+            // 2. If no active word, search for a word starting with the typed char
+            const potentialMatches = state.words.filter(w => w.text[0] === typedChar);
+            
+            if (potentialMatches.length > 0) {
+                // Pick the one lowest on the screen (highest Y value) to save the player
+                potentialMatches.sort((a, b) => b.y - a.y);
+                state.activeWord = potentialMatches[0];
+                state.activeWord.typedIndex = 1; // First letter is typed
+                state.activeWord.element.classList.add('active');
+                renderActiveWord();
+                
+                uiCurrentInput.innerText = state.activeWord.text.substring(0, 1);
+            } else {
+                // Typed a letter that matches nothing, break combo
+                state.combo = 0;
+                updateMultiplier();
+                updateHUD();
+            }
+        });
+
+        function renderActiveWord() {
+            if (!state.activeWord) return;
+            const text = state.activeWord.text;
+            const idx = state.activeWord.typedIndex;
+            const typedPart = text.substring(0, idx);
+            const remainingPart = text.substring(idx);
+            
+            state.activeWord.element.innerHTML = `<span class="typed">${typedPart}</span>${remainingPart}`;
+        }
+
+        function updateMultiplier() {
+            if (state.combo >= 20) state.multiplier = 4;
+            else if (state.combo >= 10) state.multiplier = 3;
+            else if (state.combo >= 5) state.multiplier = 2;
+            else state.multiplier = 1;
+        }
+
+        function updateHUD() {
+            uiScore.innerText = state.score;
+            uiCombo.innerText = `x${state.multiplier} (${state.combo})`;
+            uiWave.innerText = state.wave;
+            
+            uiHp.style.width = `${state.hp}%`;
+            
+            // Color changing based on HP
+            if (state.hp > 60) {
+                uiHp.style.backgroundColor = "var(--neon-green)";
+                uiHp.style.boxShadow = "0 0 15px var(--neon-green)";
+            } else if (state.hp > 30) {
+                uiHp.style.backgroundColor = "var(--neon-blue)";
+                uiHp.style.boxShadow = "0 0 15px var(--neon-blue)";
+            } else {
+                uiHp.style.backgroundColor = "var(--neon-red)";
+                uiHp.style.boxShadow = "0 0 15px var(--neon-red)";
+            }
+        }
+
+        // --- CAT SABOTAGE EVENTS ---
+        function scheduleCatEvents() {
+            // Event 1: The Paw Swat (Every 8-15 seconds)
+            const timeToSwat = Math.random() * 7000 + 8000;
+            eventTimers.push(setTimeout(() => {
+                triggerPawSwat();
+                if(state.isRunning) scheduleCatEvents(); // Reschedule
+            }, timeToSwat));
+
+            // Event 2: The UI Blocker (Every 20-30 seconds)
+            const timeToBlock = Math.random() * 10000 + 20000;
+            eventTimers.push(setTimeout(() => {
+                triggerCatBlocker();
+            }, timeToBlock));
+        }
+
+        function triggerPawSwat() {
+            if (!state.isRunning) return;
+
+            const paw = document.createElement('div');
+            paw.className = 'cat-paw';
+            paw.innerText = '🐾';
+            
+            // Random Y height for the swat
+            const swatY = Math.random() * (state.boardHeight * 0.6) + (state.boardHeight * 0.1);
+            paw.style.top = `${swatY}px`;
+            board.appendChild(paw);
+
+            // Animate across screen
+            let pawX = -150;
+            const pawSpeed = 15;
+
+            function animatePaw() {
+                if (!state.isRunning) return paw.remove();
+                
+                pawX += pawSpeed;
+                paw.style.left = `${pawX}px`;
+
+                // Check collision with words
+                const pawRect = paw.getBoundingClientRect();
+                state.words.forEach(word => {
+                    if (word.isBouncing) return; // Already hit
+
+                    const wordRect = word.element.getBoundingClientRect();
+                    
+                    // Simple AABB Collision
+                    if (pawRect.left < wordRect.right &&
+                        pawRect.right > wordRect.left &&
+                        pawRect.top < wordRect.bottom &&
+                        pawRect.bottom > wordRect.top) {
+                        
+                        // Word is BATTED!
+                        word.isBouncing = true;
+                        word.element.classList.add('bouncing');
+                        
+                        // Add crazy physics
+                        word.dx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 3); // Move sideways fast
+                        word.dy += 1; // Fall slightly faster
+                    }
+                });
+
+                if (pawX < state.boardWidth + 100) {
+                    requestAnimationFrame(animatePaw);
+                } else {
+                    paw.remove();
+                }
+            }
+            animatePaw();
+        }
+
+        function triggerCatBlocker() {
+            if (!state.isRunning) return;
+            
+            catBlocker.classList.add('active');
+            
+            // Retreat after 5 seconds
+            setTimeout(() => {
+                catBlocker.classList.remove('active');
+            }, 5000);
+        }
+
+        // --- UI BINDINGS ---
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-restart').addEventListener('click', startGame);
+        document.getElementById('btn-instructions').addEventListener('click', () => {
+            instructionsModal.classList.remove('hidden');
+        });
+        document.getElementById('btn-close-instructions').addEventListener('click', () => {
+            instructionsModal.classList.add('hidden');
+        });
+
+        init(); // Calculate initial sizes
+    </script>
+</body>
+</html>
