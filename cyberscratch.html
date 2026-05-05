@@ -132,6 +132,31 @@
             background: rgba(0, 255, 0, 0.15);
         }
 
+        .word.explosion {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            border: 1px dashed var(--neon-red);
+            background: rgba(255, 0, 0, 0.15);
+            animation: pulseExplosive 0.5s infinite alternate;
+        }
+        @keyframes pulseExplosive { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+        .word.cleanup {
+            color: #ff0;
+            text-shadow: 0 0 10px #ff0;
+            border: 1px dashed #ff0;
+            background: rgba(255, 255, 0, 0.1);
+            font-size: 1.2rem;
+        }
+
+        .word.stuck {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            color: #888;
+            text-shadow: none;
+            border: none;
+        }
+
         .scrambled-text {
             color: var(--neon-red) !important;
             text-shadow: 0 0 10px var(--neon-red) !important;
@@ -166,6 +191,25 @@
             box-shadow: 0 0 20px 5px var(--neon-red); z-index: 85;
             transition: top 0.2s, left 0.2s;
         }
+
+        .hairball {
+            position: absolute; font-size: 10rem; z-index: 40;
+            filter: drop-shadow(0 0 20px #5c3a21);
+            text-shadow: 0 0 30px #000;
+            animation: grossPulse 2s infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes grossPulse { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(1.05); } }
+
+        .meow-explosion-fx {
+            position: absolute; width: 10px; height: 10px;
+            background: var(--neon-orange); border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 50px 20px var(--neon-orange);
+            animation: boomAnim 0.6s forwards ease-out;
+            z-index: 100; pointer-events: none;
+        }
+        @keyframes boomAnim { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(150); opacity: 0; } }
 
         /* --- TYPING INTERFACE --- */
         #typing-interface {
@@ -319,7 +363,7 @@
             spawnTimer: 0, spawnInterval: 2000, baseSpeed: 0.8, boardWidth: 0, boardHeight: 0,
             
             // Progression Variables
-            phase: 'normal', // 'normal' or 'boss'
+            phase: 'normal', 
             wave: 1, 
             stageProgress: 0,
             stageTarget: 10,
@@ -330,7 +374,7 @@
             
             // Feline Variables
             isCatDistracted: false, laserCooldown: 0,
-            stuckKeyJunk: ""
+            stuckKeyJunk: "", activeHairball: null
         };
 
         let animationFrameId;
@@ -377,10 +421,10 @@
                 spawnTimer: 0, spawnInterval: diffConfig.spawnRate, baseSpeed: diffConfig.startSpeed,
                 wordsDestroyed: 0, bossesDefeated: 0, highestCombo: 0,
                 keystrokesTotal: 0, keystrokesCorrect: 0,
-                isCatDistracted: false, laserCooldown: 0, stuckKeyJunk: ""
+                isCatDistracted: false, laserCooldown: 0, stuckKeyJunk: "", activeHairball: null
             };
             
-            board.querySelectorAll('.word, .claw-marks, .laser-dot, .cat-paw').forEach(el => el.remove());
+            board.querySelectorAll('.word, .claw-marks, .laser-dot, .cat-paw, .hairball, .meow-explosion-fx').forEach(el => el.remove());
             uiCurrentInput.innerText = "";
             clearTimeout(pounceTimeoutId);
             clearTimeout(stuckKeyTimeoutId);
@@ -442,10 +486,16 @@
         // --- STAGE PROGRESSION ---
         function startBossPhase() {
             state.phase = 'boss';
-            // Clear current normal words for the dramatic boss entrance
+            
+            // Clear current words and hairball for the dramatic boss entrance
             state.words.forEach(w => w.element.remove());
             state.words = [];
             state.activeWord = null;
+            if (state.activeHairball) {
+                state.activeHairball.element.remove();
+                state.activeHairball = null;
+            }
+
             uiCurrentInput.innerText = "";
             clearTimeout(pounceTimeoutId);
             
@@ -453,14 +503,14 @@
             uiWave.classList.add('boss-text');
             uiWave.classList.remove('wave-text');
             
-            setTimeout(spawnBoss, 1500); // Small dramatic pause before boss drops
+            setTimeout(spawnBoss, 1500); 
         }
 
         function startNormalPhase() {
             state.phase = 'normal';
             state.wave++;
             state.stageProgress = 0;
-            state.stageTarget = 10 + (state.wave * 5); // Progressively harder
+            state.stageTarget = 10 + (state.wave * 5); 
             state.baseSpeed += 0.2;
             state.spawnInterval = Math.max(600, state.spawnInterval - 100);
             
@@ -477,35 +527,50 @@
         }
 
         function spawnWord() {
-            // 5% chance to spawn a heal word, otherwise spawn malware
-            const isHeal = Math.random() < 0.05;
-            const text = isHeal ? "hp.revive" : applyApexCasing(vocabList[Math.floor(Math.random() * vocabList.length)]);
-            createWordObj(text, false, isHeal);
+            const rand = Math.random();
+            let text, isHeal = false, isExplosion = false;
+
+            if (rand < 0.05) {
+                isHeal = true; text = "hp.revive";
+            } else if (rand < 0.10) {
+                isExplosion = true; text = applyApexCasing("meowexplosion.zip");
+            } else {
+                text = applyApexCasing(vocabList[Math.floor(Math.random() * vocabList.length)]);
+            }
+
+            createWordObj(text, { isHeal, isExplosion });
         }
 
         function spawnBoss() {
-            // Generates a progressively longer boss string based on wave
             const hex = Math.random().toString(16).substr(2, 6).toUpperCase();
             const baseStr = `MAINFRAME_WAVE_${state.wave}_OVERRIDE_0x${hex}`;
-            const bossText = applyApexCasing(baseStr);
-            createWordObj(bossText, true, false);
+            createWordObj(applyApexCasing(baseStr), { isBoss: true });
         }
 
-        function createWordObj(text, isBoss, isHeal) {
+        function createWordObj(text, options = {}) {
+            const isBoss = options.isBoss || false;
+            const isHeal = options.isHeal || false;
+            const isExplosion = options.isExplosion || false;
+            const isCleanup = options.isCleanup || false;
+            const noFall = options.noFall || false;
+
             const el = document.createElement('div');
-            el.className = `word ${isBoss ? 'boss' : ''} ${isHeal ? 'heal' : ''}`;
+            el.className = `word ${isBoss ? 'boss' : ''} ${isHeal ? 'heal' : ''} ${isExplosion ? 'explosion' : ''} ${isCleanup ? 'cleanup' : ''}`;
             el.innerHTML = text;
             board.appendChild(el);
 
-            const x = Math.random() * (state.boardWidth - el.clientWidth);
-            const y = isBoss ? -100 : -30;
-            // Bosses fall much slower due to their length
-            const dy = isBoss ? (state.baseSpeed * 0.3) : state.baseSpeed + (Math.random() * 0.5);
+            const x = options.spawnX !== undefined ? options.spawnX : Math.random() * (state.boardWidth - el.clientWidth);
+            const y = options.spawnY !== undefined ? options.spawnY : (isBoss ? -100 : -30);
+            
+            let dy = 0;
+            if (!noFall) {
+                dy = isBoss ? (state.baseSpeed * 0.3) : state.baseSpeed + (Math.random() * 0.5);
+            }
 
             state.words.push({
                 id: Math.random().toString(36).substr(2, 9), text: text, typedIndex: 0,
                 x: x, y: y, dx: 0, dy: dy, 
-                element: el, isBouncing: false, isBoss: isBoss, isHeal: isHeal
+                element: el, isBouncing: false, isBoss, isHeal, isExplosion, isCleanup, isStuck: false
             });
         }
 
@@ -514,16 +579,46 @@
                 const word = state.words[i];
                 word.x += word.dx; word.y += word.dy;
 
+                // Wall bouncing
                 if (word.isBouncing) {
                     if (word.x <= 0 || word.x + word.element.clientWidth >= state.boardWidth) {
                         word.dx *= -1; word.x = Math.max(0, Math.min(word.x, state.boardWidth - word.element.clientWidth));
                     }
                 }
+
+                // Hairball Collision (if normal word falling)
+                if (state.activeHairball && !word.isBoss && !word.isCleanup && !word.isStuck && !word.isHeal && !word.isExplosion) {
+                    const dx = (word.x + word.element.clientWidth/2) - state.activeHairball.x;
+                    const dy = (word.y + word.element.clientHeight/2) - state.activeHairball.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < state.activeHairball.radius) {
+                        word.isStuck = true;
+                        word.dx = 0; word.dy = 0;
+                        word.element.classList.add('stuck');
+                    }
+                }
+
                 word.element.style.transform = `translate(${word.x}px, ${word.y}px)`;
 
+                // Hit bottom of screen
                 if (word.y + word.element.clientHeight >= state.boardHeight) {
                     takeDamage(word.isBoss ? 40 : 10);
                     destroyWord(i, false);
+                }
+            }
+        }
+
+        function triggerMeowExplosion(x, y, sourceId) {
+            const boom = document.createElement('div');
+            boom.className = 'meow-explosion-fx';
+            boom.style.left = `${x}px`; boom.style.top = `${y}px`;
+            board.appendChild(boom);
+            setTimeout(() => boom.remove(), 600);
+
+            // Destroy all normal words (chain reactions allowed)
+            for (let i = state.words.length - 1; i >= 0; i--) {
+                const w = state.words[i];
+                if (!w.isBoss && !w.isCleanup && w.id !== sourceId) {
+                    destroyWord(i, true);
                 }
             }
         }
@@ -540,16 +635,31 @@
                 word.element.style.opacity = "0";
                 
                 if (word.isHeal) {
-                    state.hp = Math.min(100, state.hp + 25);
+                    state.hp = 100; // Full HP restore
                     updateHUD();
+                } else if (word.isExplosion) {
+                    triggerMeowExplosion(word.x, word.y, word.id);
+                } else if (word.isCleanup) {
+                    // Check if hairball is cleaned
+                    const cleanupsLeft = state.words.filter(w => w.isCleanup && w.id !== word.id).length;
+                    if (cleanupsLeft === 0 && state.activeHairball) {
+                        state.activeHairball.element.remove();
+                        state.activeHairball = null;
+                        // Destroy all stuck words instantly
+                        setTimeout(() => {
+                            if (!state.isRunning) return;
+                            for (let k = state.words.length - 1; k >= 0; k--) {
+                                if (state.words[k].isStuck) destroyWord(k, true);
+                            }
+                        }, 50);
+                    }
                 } else if (word.isBoss) {
                     state.bossesDefeated++; 
                     state.score += 500;
                     startNormalPhase();
                 } else {
                     state.wordsDestroyed++;
-                    // Progress the stage if we just killed a normal word in the normal phase
-                    if (state.phase === 'normal') {
+                    if (state.phase === 'normal' && !word.isStuck) {
                         state.stageProgress++;
                         if (state.stageProgress >= state.stageTarget) {
                             startBossPhase();
@@ -590,14 +700,13 @@
         window.addEventListener('keydown', (e) => {
             if (!state.isRunning) return;
 
-            // 1. Backspace Handling
             if (e.key === 'Backspace') {
                 if (state.stuckKeyJunk.length > 0) {
                     state.stuckKeyJunk = state.stuckKeyJunk.slice(0, -1);
                     uiCurrentInput.innerText = state.stuckKeyJunk;
                     if (state.stuckKeyJunk.length === 0) {
                         notificationArea.classList.remove('active');
-                        clearTimeout(stuckKeyTimeoutId); // Cancel auto-timeout if cleared early
+                        clearTimeout(stuckKeyTimeoutId); 
                         uiCurrentInput.innerText = state.activeWord ? state.activeWord.text.substring(0, state.activeWord.typedIndex) : "";
                     }
                     return;
@@ -618,7 +727,7 @@
             }
 
             if (e.key.length !== 1 || e.ctrlKey || e.metaKey) return;
-            if (state.stuckKeyJunk.length > 0) return; // Block typing if stuck key active
+            if (state.stuckKeyJunk.length > 0) return; 
 
             state.keystrokesTotal++;
             const typedChar = currentDifficulty === 'apex' ? e.key : e.key.toLowerCase();
@@ -641,7 +750,6 @@
                         updateMultiplier(); updateHUD(); uiCurrentInput.innerText = ""; clearTimeout(pounceTimeoutId);
                     }
                 } else {
-                    // Flashbangs removed. Combo still breaks.
                     state.combo = 0; updateMultiplier(); updateHUD();
                     uiCurrentInput.innerText = state.activeWord.text.substring(0, state.activeWord.typedIndex); 
                 }
@@ -682,10 +790,7 @@
         function updateHUD() {
             uiScore.innerText = state.score;
             uiCombo.innerText = `x${state.multiplier} (${state.combo})`;
-            
-            // Only update wave text if we are in normal phase (Boss has its own text logic)
             if (state.phase === 'normal') uiWave.innerText = `WAVE ${state.wave}`;
-            
             uiHp.style.width = `${state.hp}%`;
             
             if (state.hp > 60) { uiHp.style.backgroundColor = "var(--neon-green)"; uiHp.style.boxShadow = "0 0 15px var(--neon-green)"; } 
@@ -698,6 +803,35 @@
             eventTimers.push(setTimeout(() => { triggerPawSwat(); if(state.isRunning) scheduleCatEvents(); }, Math.random() * 7000 + 8000));
             eventTimers.push(setTimeout(() => { triggerCatBlocker(); }, Math.random() * 10000 + 20000));
             eventTimers.push(setTimeout(() => { triggerStuckKey(); }, Math.random() * 15000 + 25000));
+            eventTimers.push(setTimeout(() => { triggerHairball(); }, Math.random() * 20000 + 30000));
+        }
+
+        function triggerHairball() {
+            if (!state.isRunning || state.isCatDistracted || state.phase === 'boss' || state.activeHairball) return;
+            
+            const hb = document.createElement('div');
+            hb.className = 'hairball';
+            hb.innerText = '🧶'; // Yarn/Hairball visual
+            
+            const hx = state.boardWidth / 2;
+            const hy = state.boardHeight / 3;
+            
+            hb.style.left = `${hx}px`;
+            hb.style.top = `${hy}px`;
+            hb.style.transform = `translate(-50%, -50%)`;
+            board.appendChild(hb);
+
+            state.activeHairball = { element: hb, x: hx, y: hy, radius: 100 };
+
+            // Spawn the 3 hovering cleanups
+            for(let i=0; i<3; i++) {
+                createWordObj(applyApexCasing("clean_up.exe"), {
+                    isCleanup: true,
+                    noFall: true,
+                    spawnX: hx - 100 + (Math.random() * 150),
+                    spawnY: hy + 80 + (i * 40)
+                });
+            }
         }
 
         function triggerStuckKey() {
@@ -706,15 +840,11 @@
             const spamChars = ['j', 'k', 's', 'm', 'w'];
             const char = spamChars[Math.floor(Math.random() * spamChars.length)];
             
-            // Instantly fill the input with junk
             state.stuckKeyJunk = char.repeat(8);
             uiCurrentInput.innerText = state.stuckKeyJunk;
             state.combo = 0; updateMultiplier(); updateHUD();
 
-            // Clear previous timeout if any
             clearTimeout(stuckKeyTimeoutId);
-            
-            // Set exact 5-second automatic timeout for the key smash
             stuckKeyTimeoutId = setTimeout(() => {
                 if (state.stuckKeyJunk.length > 0) {
                     state.stuckKeyJunk = "";
@@ -742,7 +872,7 @@
                 const pawRect = paw.getBoundingClientRect();
                 
                 state.words.forEach(word => {
-                    if (word.isBouncing || word.isBoss) return; 
+                    if (word.isBouncing || word.isBoss || word.isStuck || word.isCleanup) return; 
                     const wordRect = word.element.getBoundingClientRect();
                     if (pawRect.left < wordRect.right && pawRect.right > wordRect.left && pawRect.top < wordRect.bottom && pawRect.bottom > wordRect.top) {
                         word.isBouncing = true; word.element.classList.add('bouncing');
@@ -764,10 +894,9 @@
         laserBtn.addEventListener('click', () => {
             if (state.laserCooldown > 0 || !state.isRunning) return;
             state.isCatDistracted = true;
-            state.laserCooldown = 30000; // 30 sec cooldown
+            state.laserCooldown = 30000; 
             laserBtn.classList.add('cooldown');
             
-            // Visual distraction
             const dot = document.createElement('div'); dot.className = 'laser-dot'; board.appendChild(dot);
             const paw = document.createElement('div'); paw.className = 'cat-paw'; paw.innerText = '🐾'; paw.style.transition = 'top 0.3s, left 0.3s'; board.appendChild(paw);
             
@@ -779,7 +908,7 @@
                 setTimeout(() => { paw.style.left = `${rx - 20}px`; paw.style.top = `${ry - 20}px`; }, 200);
                 
                 moves++;
-                if (moves > 10) { // 10 seconds total (1 sec per move)
+                if (moves > 10) { 
                     clearInterval(laserInterval);
                     dot.remove(); paw.remove();
                     state.isCatDistracted = false;
