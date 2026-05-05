@@ -61,6 +61,7 @@
         .hud-value { font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 5px var(--neon-green); }
         .combo-text { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
         .wave-text { color: var(--neon-purple); text-shadow: 0 0 5px var(--neon-purple); }
+        .boss-text { color: var(--neon-orange); text-shadow: 0 0 5px var(--neon-orange); }
 
         #laser-btn {
             cursor: pointer;
@@ -102,6 +103,7 @@
             padding: 0.2rem 0.5rem;
             white-space: nowrap;
             will-change: transform;
+            transition: opacity 0.2s;
         }
 
         .word.active {
@@ -121,6 +123,13 @@
             border: 2px solid var(--neon-orange);
             background: rgba(255, 153, 0, 0.1);
             padding: 10px;
+        }
+
+        .word.heal {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green);
+            border: 1px dashed var(--neon-green);
+            background: rgba(0, 255, 0, 0.15);
         }
 
         .scrambled-text {
@@ -212,8 +221,6 @@
 
         .shake { animation: screenShake 0.3s; }
         @keyframes screenShake { 0% { transform: translate(0,0); } 20% { transform: translate(-10px, 5px); } 40% { transform: translate(10px, -5px); } 60% { transform: translate(-10px, -5px); } 80% { transform: translate(10px, 5px); } 100% { transform: translate(0,0); } }
-        .error-flash { animation: errorFlash 0.2s; }
-        @keyframes errorFlash { 0% { background-color: rgba(255,0,0,0.2); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body>
@@ -228,8 +235,8 @@
             <span class="hud-value combo-text" id="ui-combo">x1</span>
         </div>
         <div class="hud-stat">
-            <span class="hud-label">Wave</span>
-            <span class="hud-value wave-text" id="ui-wave">1</span>
+            <span class="hud-label">Status</span>
+            <span class="hud-value wave-text" id="ui-wave">WAVE 1</span>
         </div>
         <div id="laser-btn" class="hud-stat">
             <span class="hud-label">Distract Cat</span>
@@ -238,7 +245,7 @@
     </div>
 
     <div id="notification-area">
-        🐈⌨️ CAT ON KEYBOARD! MASH BACKSPACE!
+        🐈⌨️ CAT ON KEYBOARD!
     </div>
 
     <div id="game-board">
@@ -307,22 +314,29 @@
 
         // --- GAME STATE ---
         let state = {
-            score: 0, combo: 0, multiplier: 1, wave: 1, hp: 100,
+            score: 0, combo: 0, multiplier: 1, hp: 100,
             words: [], activeWord: null, isRunning: false, lastTime: 0,
             spawnTimer: 0, spawnInterval: 2000, baseSpeed: 0.8, boardWidth: 0, boardHeight: 0,
             
-            // New Trackers
+            // Progression Variables
+            phase: 'normal', // 'normal' or 'boss'
+            wave: 1, 
+            stageProgress: 0,
+            stageTarget: 10,
+            
+            // Trackers
             wordsDestroyed: 0, bossesDefeated: 0, highestCombo: 0,
-            keystrokesTotal: 0, keystrokesCorrect: 0, bossTimer: 0,
+            keystrokesTotal: 0, keystrokesCorrect: 0,
             
             // Feline Variables
             isCatDistracted: false, laserCooldown: 0,
-            stuckKeyJunk: "", stuckKeyInterval: null
+            stuckKeyJunk: ""
         };
 
         let animationFrameId;
         let eventTimers = [];
         let pounceTimeoutId = null;
+        let stuckKeyTimeoutId = null;
 
         // --- DOM ELEMENTS ---
         const board = document.getElementById('game-board');
@@ -357,18 +371,19 @@
             const diffConfig = difficulties[currentDifficulty];
 
             state = { ...state, 
-                score: 0, combo: 0, multiplier: 1, wave: 1, hp: 100,
+                score: 0, combo: 0, multiplier: 1, hp: 100,
+                phase: 'normal', wave: 1, stageProgress: 0, stageTarget: 10,
                 words: [], activeWord: null, isRunning: true,
                 spawnTimer: 0, spawnInterval: diffConfig.spawnRate, baseSpeed: diffConfig.startSpeed,
                 wordsDestroyed: 0, bossesDefeated: 0, highestCombo: 0,
-                keystrokesTotal: 0, keystrokesCorrect: 0, bossTimer: 0,
+                keystrokesTotal: 0, keystrokesCorrect: 0,
                 isCatDistracted: false, laserCooldown: 0, stuckKeyJunk: ""
             };
             
             board.querySelectorAll('.word, .claw-marks, .laser-dot, .cat-paw').forEach(el => el.remove());
             uiCurrentInput.innerText = "";
             clearTimeout(pounceTimeoutId);
-            clearInterval(state.stuckKeyInterval);
+            clearTimeout(stuckKeyTimeoutId);
             notificationArea.classList.remove('active');
             
             updateHUD(); scheduleCatEvents();
@@ -379,12 +394,12 @@
         function gameOver() {
             state.isRunning = false;
             cancelAnimationFrame(animationFrameId);
-            eventTimers.forEach(clearTimeout); clearTimeout(pounceTimeoutId); clearInterval(state.stuckKeyInterval);
+            eventTimers.forEach(clearTimeout); clearTimeout(pounceTimeoutId); clearTimeout(stuckKeyTimeoutId);
             
             document.getElementById('stat-score').innerText = state.score;
             document.getElementById('stat-combo').innerText = state.highestCombo;
             document.getElementById('stat-words').innerText = state.wordsDestroyed;
-            document.getElementById('stat-bosses').innerText = `${state.bossesDefeated} (+${state.bossesDefeated * 100} Bonus)`;
+            document.getElementById('stat-bosses').innerText = `${state.bossesDefeated} (+${state.bossesDefeated * 500} Bonus)`;
             
             let acc = state.keystrokesTotal > 0 ? Math.round((state.keystrokesCorrect / state.keystrokesTotal) * 100) : 0;
             document.getElementById('stat-acc').innerText = `${acc}%`;
@@ -400,14 +415,15 @@
             const deltaTime = timestamp - state.lastTime;
             state.lastTime = timestamp;
 
-            state.spawnTimer += deltaTime;
-            if (state.spawnTimer > state.spawnInterval) { spawnWord(); state.spawnTimer = 0; }
+            if (state.phase === 'normal') {
+                state.spawnTimer += deltaTime;
+                if (state.spawnTimer > state.spawnInterval) { 
+                    spawnWord(); 
+                    state.spawnTimer = 0; 
+                }
+            }
 
-            // Boss Spawning
-            state.bossTimer += deltaTime;
-            if (state.bossTimer >= 30000) { spawnBoss(); state.bossTimer = 0; }
-
-            // Laser Cooldown
+            // Laser Cooldown UI
             if (state.laserCooldown > 0) {
                 state.laserCooldown -= deltaTime;
                 if (state.laserCooldown <= 0) {
@@ -420,15 +436,38 @@
             }
 
             updateWords();
-
-            const expectedWave = Math.floor(state.score / 1500) + 1;
-            if (expectedWave > state.wave) {
-                state.wave = expectedWave; state.baseSpeed += 0.2;
-                state.spawnInterval = Math.max(600, state.spawnInterval - 100); 
-                updateHUD();
-            }
-
             animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- STAGE PROGRESSION ---
+        function startBossPhase() {
+            state.phase = 'boss';
+            // Clear current normal words for the dramatic boss entrance
+            state.words.forEach(w => w.element.remove());
+            state.words = [];
+            state.activeWord = null;
+            uiCurrentInput.innerText = "";
+            clearTimeout(pounceTimeoutId);
+            
+            uiWave.innerText = `BOSS DETECTED!`;
+            uiWave.classList.add('boss-text');
+            uiWave.classList.remove('wave-text');
+            
+            setTimeout(spawnBoss, 1500); // Small dramatic pause before boss drops
+        }
+
+        function startNormalPhase() {
+            state.phase = 'normal';
+            state.wave++;
+            state.stageProgress = 0;
+            state.stageTarget = 10 + (state.wave * 5); // Progressively harder
+            state.baseSpeed += 0.2;
+            state.spawnInterval = Math.max(600, state.spawnInterval - 100);
+            
+            uiWave.innerText = `WAVE ${state.wave}`;
+            uiWave.classList.add('wave-text');
+            uiWave.classList.remove('boss-text');
+            updateHUD();
         }
 
         // --- WORD MANAGEMENT ---
@@ -438,28 +477,35 @@
         }
 
         function spawnWord() {
-            const text = applyApexCasing(vocabList[Math.floor(Math.random() * vocabList.length)]);
-            createWordObj(text, false);
+            // 5% chance to spawn a heal word, otherwise spawn malware
+            const isHeal = Math.random() < 0.05;
+            const text = isHeal ? "hp.revive" : applyApexCasing(vocabList[Math.floor(Math.random() * vocabList.length)]);
+            createWordObj(text, false, isHeal);
         }
 
         function spawnBoss() {
-            const bossText = applyApexCasing("MAINFRAME_OVERRIDE_0XDEADBEEF");
-            createWordObj(bossText, true);
+            // Generates a progressively longer boss string based on wave
+            const hex = Math.random().toString(16).substr(2, 6).toUpperCase();
+            const baseStr = `MAINFRAME_WAVE_${state.wave}_OVERRIDE_0x${hex}`;
+            const bossText = applyApexCasing(baseStr);
+            createWordObj(bossText, true, false);
         }
 
-        function createWordObj(text, isBoss) {
+        function createWordObj(text, isBoss, isHeal) {
             const el = document.createElement('div');
-            el.className = `word ${isBoss ? 'boss' : ''}`;
+            el.className = `word ${isBoss ? 'boss' : ''} ${isHeal ? 'heal' : ''}`;
             el.innerHTML = text;
             board.appendChild(el);
 
             const x = Math.random() * (state.boardWidth - el.clientWidth);
             const y = isBoss ? -100 : -30;
+            // Bosses fall much slower due to their length
+            const dy = isBoss ? (state.baseSpeed * 0.3) : state.baseSpeed + (Math.random() * 0.5);
 
             state.words.push({
                 id: Math.random().toString(36).substr(2, 9), text: text, typedIndex: 0,
-                x: x, y: y, dx: 0, dy: isBoss ? state.baseSpeed * 0.4 : state.baseSpeed + (Math.random() * 0.5), 
-                element: el, isBouncing: false, isBoss: isBoss
+                x: x, y: y, dx: 0, dy: dy, 
+                element: el, isBouncing: false, isBoss: isBoss, isHeal: isHeal
             });
         }
 
@@ -492,8 +538,24 @@
                 word.element.style.color = "#0f0";
                 word.element.style.transform = `translate(${word.x}px, ${word.y}px) scale(1.5)`;
                 word.element.style.opacity = "0";
-                state.wordsDestroyed += word.isBoss ? 100 : 1; 
-                if (word.isBoss) { state.bossesDefeated++; state.score += 1000; }
+                
+                if (word.isHeal) {
+                    state.hp = Math.min(100, state.hp + 25);
+                    updateHUD();
+                } else if (word.isBoss) {
+                    state.bossesDefeated++; 
+                    state.score += 500;
+                    startNormalPhase();
+                } else {
+                    state.wordsDestroyed++;
+                    // Progress the stage if we just killed a normal word in the normal phase
+                    if (state.phase === 'normal') {
+                        state.stageProgress++;
+                        if (state.stageProgress >= state.stageTarget) {
+                            startBossPhase();
+                        }
+                    }
+                }
             }
             
             setTimeout(() => { if(word.element.parentNode) word.element.remove(); }, 100);
@@ -535,6 +597,7 @@
                     uiCurrentInput.innerText = state.stuckKeyJunk;
                     if (state.stuckKeyJunk.length === 0) {
                         notificationArea.classList.remove('active');
+                        clearTimeout(stuckKeyTimeoutId); // Cancel auto-timeout if cleared early
                         uiCurrentInput.innerText = state.activeWord ? state.activeWord.text.substring(0, state.activeWord.typedIndex) : "";
                     }
                     return;
@@ -578,7 +641,7 @@
                         updateMultiplier(); updateHUD(); uiCurrentInput.innerText = ""; clearTimeout(pounceTimeoutId);
                     }
                 } else {
-                    document.body.classList.add('error-flash'); setTimeout(() => document.body.classList.remove('error-flash'), 200);
+                    // Flashbangs removed. Combo still breaks.
                     state.combo = 0; updateMultiplier(); updateHUD();
                     uiCurrentInput.innerText = state.activeWord.text.substring(0, state.activeWord.typedIndex); 
                 }
@@ -619,7 +682,10 @@
         function updateHUD() {
             uiScore.innerText = state.score;
             uiCombo.innerText = `x${state.multiplier} (${state.combo})`;
-            uiWave.innerText = state.wave;
+            
+            // Only update wave text if we are in normal phase (Boss has its own text logic)
+            if (state.phase === 'normal') uiWave.innerText = `WAVE ${state.wave}`;
+            
             uiHp.style.width = `${state.hp}%`;
             
             if (state.hp > 60) { uiHp.style.backgroundColor = "var(--neon-green)"; uiHp.style.boxShadow = "0 0 15px var(--neon-green)"; } 
@@ -640,13 +706,22 @@
             const spamChars = ['j', 'k', 's', 'm', 'w'];
             const char = spamChars[Math.floor(Math.random() * spamChars.length)];
             
-            state.stuckKeyInterval = setInterval(() => {
-                if(state.stuckKeyJunk.length < 15) {
-                    state.stuckKeyJunk += char;
-                    uiCurrentInput.innerText = state.stuckKeyJunk;
-                    state.combo = 0; updateMultiplier(); updateHUD();
+            // Instantly fill the input with junk
+            state.stuckKeyJunk = char.repeat(8);
+            uiCurrentInput.innerText = state.stuckKeyJunk;
+            state.combo = 0; updateMultiplier(); updateHUD();
+
+            // Clear previous timeout if any
+            clearTimeout(stuckKeyTimeoutId);
+            
+            // Set exact 5-second automatic timeout for the key smash
+            stuckKeyTimeoutId = setTimeout(() => {
+                if (state.stuckKeyJunk.length > 0) {
+                    state.stuckKeyJunk = "";
+                    notificationArea.classList.remove('active');
+                    uiCurrentInput.innerText = state.activeWord ? state.activeWord.text.substring(0, state.activeWord.typedIndex) : "";
                 }
-            }, 150);
+            }, 5000);
         }
 
         function triggerPawSwat() {
